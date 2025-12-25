@@ -1,11 +1,3 @@
-# Quiz-App 🎮
-
-**Quiz-App** is a powerful quiz application designed to help developers sharpen their skills through dynamic and AI-generated questions. It generates 10 random questions in various fields such as programming languages, databases, APIs, and more.
-
-This app aims to assist programmers in enhancing their knowledge and tracking their progress in different aspects of software development. 🤖
-
----
-
 <h1 align="center">🎮 Quiz-App - AI-Powered Quiz Generator</h1>
 
 <p align="center">
@@ -46,7 +38,7 @@ This app aims to assist programmers in enhancing their knowledge and tracking th
 
 ## 📁 Project Structure
 
-```bash
+
 lib/
 │
 ├── core/
@@ -61,7 +53,7 @@ lib/
 ├── widgets/              
 └── main.dart              
 
-
+---
 ## Contents 📑
 
 - [About the App](#about-the-app)
