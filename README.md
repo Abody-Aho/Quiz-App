@@ -35,25 +35,6 @@
 | 📱 **Google Maps API** | Optional integration for location-based features (coming soon) |
 
 ---
-
-## 📁 Project Structure
-
-
-lib/
-│
-├── core/
-│   ├── model/      
-│   ├── service/         
-│
-├── modules/
-│   ├── quiz/             
-│   ├── auth/              
-│   └── dashboard/        
-│
-├── widgets/              
-└── main.dart              
-
----
 ## Contents 📑
 
 - [About the App](#about-the-app)
