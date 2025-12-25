@@ -1,0 +1,75 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../model/model.dart';
+import '../secrets.dart';
+
+class GroqAIService {
+  Future<List<Question>> generateQuizByCategory(Category category) async {
+    final prompt = """
+Generate 10 multiple choice questions about:
+
+Category: ${category.title}
+Topics: ${category.prompt}
+
+Rules:
+- Each question has exactly 4 options
+- Only ONE option is correct
+- Return ONLY JSON in a valid list format.
+- Format:
+[
+  {
+    "question": "text",
+    "options": ["A","B","C","D"],
+    "correctIndex": 0
+  }
+]
+""";
+
+    final res = await http.post(
+      Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $groqApiKey',
+      },
+      body: jsonEncode({
+        "model": "llama-3.1-8b-instant",
+        "messages": [
+          {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.1,
+      }),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to load questions: ${res.body}');
+    }
+
+    final body = jsonDecode(utf8.decode(res.bodyBytes));
+    String content = body['choices'][0]['message']['content'];
+
+    content = _extractJson(content);
+
+    final List data = jsonDecode(content);
+
+    return data.map<Question>((q) {
+      return Question(
+        text: q['question'],
+        options: List.generate(4, (i) {
+          return Option(
+            text: q['options'][i],
+            isCorrect: i == q['correctIndex'],
+          );
+        }),
+      );
+    }).toList();
+  }
+
+  String _extractJson(String text) {
+    final start = text.indexOf('[');
+    final end = text.lastIndexOf(']');
+    if (start != -1 && end != -1 && end > start) {
+      return text.substring(start, end + 1);
+    }
+    return text;
+  }
+}
