@@ -33,7 +33,7 @@ class LanguageSelectionPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CategoryPage(language: 'en')),
+                    MaterialPageRoute(builder: (_) => CategoryPage(language: 'en',direction: TextDirection.ltr,)),
                   );
                 },
                 style: ElevatedButton.styleFrom(fixedSize: Size(200, 200),
@@ -57,7 +57,7 @@ class LanguageSelectionPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CategoryPage(language: 'ar')),
+                    MaterialPageRoute(builder: (_) => CategoryPage(language: 'ar', direction: TextDirection.rtl,)),
                   );
                 },
                 style: ElevatedButton.styleFrom(

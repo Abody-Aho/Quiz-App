@@ -23,19 +23,41 @@ class Option {
     required this.isCorrect,
   });
 }
-
 class Category {
   final String id;
   final String title;
-  final String image;
   final String prompt;
+  final String image;
   final TextDirection direction;
 
-  Category( {
+  Category({
     required this.id,
     required this.title,
+    required this.prompt,
     required this.image,
     required this.direction,
-    required this.prompt,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'prompt': prompt,
+      'image': image,
+      'direction': direction == TextDirection.rtl ? 'rtl' : 'ltr',
+    };
+  }
+
+  factory Category.fromMap(Map<String, dynamic> map) {
+    return Category(
+      id: map['id'],
+      title: map['title'],
+      prompt: map['prompt'],
+      image: map['image'],
+      direction:
+      map['direction'] == 'rtl' ? TextDirection.rtl : TextDirection.ltr,
+    );
+  }
 }
+
+

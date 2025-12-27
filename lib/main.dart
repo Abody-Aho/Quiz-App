@@ -1,7 +1,11 @@
 import 'package:exam/view/splash_page.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('categories');
   runApp(const MyApp());
 }
 
