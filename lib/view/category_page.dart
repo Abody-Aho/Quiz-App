@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../model/model.dart';
 import '../widget/categories.dart';
 import 'question_view.dart';
@@ -26,24 +27,31 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
+  // Controllers لحقول الإدخال
   TextEditingController titleController = TextEditingController();
   TextEditingController promptController = TextEditingController();
+
+  // مفاتيح تستخدم في tutorial coach mark
+  final GlobalKey _firstCategoryKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
 
   XFile? selectedImage;
   final _formKey = GlobalKey<FormState>();
 
-  late List<Category> filteredCategories;
+  // قائمة الفئات بعد التصفية حسب اللغة
+  List<Category> filteredCategories = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadData(); // تحميل البيانات المحفوظة
   }
 
   Future<void> _loadData() async {
     final savedCategories = await loadCategories();
 
+    // استرجاع الفئات من التخزين المحلي
     if (savedCategories.isNotEmpty) {
       setState(() {
         categories
@@ -53,45 +61,56 @@ class _CategoryPageState extends State<CategoryPage> {
     }
 
     _updateFilteredCategories();
+
+    // عرض الإرشادات لأول مرة فقط
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (filteredCategories.isNotEmpty) {
+        _checkAndShowTutorial();
+      }
+    });
   }
 
-  Future<void> saveCategories(List<Category> categories) async {
+  Future<void> _checkAndShowTutorial() async {
     final prefs = await SharedPreferences.getInstance();
 
-    List<String> jsonList = categories
-        .map((category) => jsonEncode(category.toMap()))
-        .toList();
+    final bool isTutorialShown =
+        prefs.getBool('tutorial_shown_${widget.language}') ?? false;
 
+    if (!isTutorialShown) {
+      _createTutorial();
+      await prefs.setBool('tutorial_shown_${widget.language}', true);
+    }
+  }
+
+  // حفظ الفئات محليًا
+  Future<void> saveCategories(List<Category> categories) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> jsonList =
+    categories.map((c) => jsonEncode(c.toMap())).toList();
     await prefs.setStringList('categories', jsonList);
   }
 
+  // تحميل الفئات من التخزين المحلي
   Future<List<Category>> loadCategories() async {
     final prefs = await SharedPreferences.getInstance();
-
     final List<String>? jsonList = prefs.getStringList('categories');
-
     if (jsonList == null) return [];
-
-    return jsonList
-        .map((json) => Category.fromMap(jsonDecode(json)))
-        .toList();
+    return jsonList.map((j) => Category.fromMap(jsonDecode(j))).toList();
   }
 
+  // حفظ الصورة في مسار دائم
   Future<String> saveImagePermanently(File image) async {
     final dir = await getApplicationDocumentsDirectory();
-
     final fileName = p.basename(image.path);
     final savedImage = await image.copy('${dir.path}/$fileName');
-
     return savedImage.path;
   }
 
-
+  // فلترة الفئات حسب اللغة
   void _updateFilteredCategories() {
     setState(() {
-      filteredCategories = categories
-          .where((category) => category.id == widget.language)
-          .toList();
+      filteredCategories =
+          categories.where((c) => c.id == widget.language).toList();
     });
   }
 
@@ -141,6 +160,7 @@ class _CategoryPageState extends State<CategoryPage> {
             itemBuilder: (context, index) {
               final category = filteredCategories[index];
               return GestureDetector(
+                // ضغط مطول للتعديل أو الحذف
                 onLongPress: () => _showEditCategoryDialog(
                   category,
                   categories.indexOf(category),
@@ -152,6 +172,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 child: Container(
+                  key: index == 0 ? _firstCategoryKey : null,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -184,17 +205,19 @@ class _CategoryPageState extends State<CategoryPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: _fabKey,
         backgroundColor: primaryPurple,
         child: const Icon(Icons.add, color: Colors.white),
         onPressed: () {
           _clearCategoryForm();
           _showAddCategoryDialog();
-        } ,
+        },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
+  // التعامل مع الصور (asset أو file)
   Widget _buildCategoryImage(String imagePath) {
     if (imagePath.isEmpty) {
       return Container(
@@ -210,8 +233,7 @@ class _CategoryPageState extends State<CategoryPage> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: imagePath.startsWith('asset')
-          ? Image.asset(imagePath,
-          height: 70, width: 70, fit: BoxFit.cover)
+          ? Image.asset(imagePath, height: 70, width: 70, fit: BoxFit.cover)
           : Image.file(
         File(imagePath),
         height: 70,
@@ -220,6 +242,7 @@ class _CategoryPageState extends State<CategoryPage> {
       ),
     );
   }
+
   void _clearCategoryForm() {
     titleController.clear();
     promptController.clear();
@@ -235,7 +258,9 @@ class _CategoryPageState extends State<CategoryPage> {
             return AlertDialog(
               backgroundColor: const Color(0xFF2E2A50),
               title: Text(
-                widget.language == 'en' ? 'Add New Category' : 'إضافة فئة جديدة',
+                widget.language == 'en'
+                    ? 'Add New Category'
+                    : 'إضافة فئة جديدة',
                 style: const TextStyle(color: Colors.white),
               ),
               content: SingleChildScrollView(
@@ -248,20 +273,17 @@ class _CategoryPageState extends State<CategoryPage> {
                         hintText: widget.language == 'en' ? 'Title' : 'العنوان',
                         titleController: titleController,
                         validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon: const Icon(
-                          Icons.title,
-                          color: Colors.black,
-                        ),
+                        prefixIcon: const Icon(Icons.title, color: Colors.black),
                       ),
                       const SizedBox(height: 15),
                       CustomTextField(
-                        hintText: widget.language == 'en' ? 'Description' : 'وصف للذكاء الاصطناعي',
+                        hintText: widget.language == 'en'
+                            ? 'Description'
+                            : 'وصف للذكاء الاصطناعي',
                         titleController: promptController,
                         validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon: const Icon(
-                          Icons.description,
-                          color: Colors.black,
-                        ),
+                        prefixIcon:
+                        const Icon(Icons.description, color: Colors.black),
                       ),
                       const SizedBox(height: 15),
                       if (selectedImage != null)
@@ -279,24 +301,25 @@ class _CategoryPageState extends State<CategoryPage> {
                           fit: BoxFit.cover,
                         ),
                       TextButton.icon(
-                        icon: const Icon(Icons.image, color: Colors.white70),
-                        label:  Text(
+                        icon:
+                        const Icon(Icons.image, color: Colors.white70),
+                        label: Text(
                           widget.language == 'en' ? 'Image' : 'اختر صورة',
-                          style: TextStyle(color: Colors.white70),
+                          style:
+                          const TextStyle(color: Colors.white70),
                         ),
                         onPressed: () async {
-                          final picked =
-                          await ImagePicker().pickImage(source: ImageSource.gallery);
-
+                          final picked = await ImagePicker()
+                              .pickImage(source: ImageSource.gallery);
                           if (picked != null) {
                             final permanentPath =
-                            await saveImagePermanently(File(picked.path));
-
+                            await saveImagePermanently(
+                              File(picked.path),
+                            );
                             setDialogState(() {
                               selectedImage = XFile(permanentPath);
                             });
                           }
-
                         },
                       ),
                     ],
@@ -306,31 +329,26 @@ class _CategoryPageState extends State<CategoryPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child:  Text(
+                  child: Text(
                     widget.language == 'en' ? 'Cancel' : 'إلغاء',
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () async{
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      final newCategory = Category(
-                        id: widget.language,
-                        title: titleController.text,
-                        prompt: promptController.text,
-                        image: selectedImage?.path ?? '',
-                        direction: widget.direction,
+                      categories.add(
+                        Category(
+                          id: widget.language,
+                          title: titleController.text,
+                          prompt: promptController.text,
+                          image: selectedImage?.path ?? '',
+                          direction: widget.direction,
+                        ),
                       );
-
-                      categories.add(newCategory);
                       await saveCategories(categories);
-
                       _updateFilteredCategories();
-
-                      titleController.clear();
-                      promptController.clear();
-                      selectedImage = null;
-
+                      _clearCategoryForm();
                       Navigator.pop(context);
                     }
                   },
@@ -347,8 +365,7 @@ class _CategoryPageState extends State<CategoryPage> {
   void _showEditCategoryDialog(Category category, int index) {
     titleController.text = category.title;
     promptController.text = category.prompt;
-    selectedImage =
-    category.image.isNotEmpty ? XFile(category.image) : null;
+    selectedImage = category.image.isNotEmpty ? XFile(category.image) : null;
 
     showDialog(
       context: context,
@@ -358,9 +375,7 @@ class _CategoryPageState extends State<CategoryPage> {
             return AlertDialog(
               backgroundColor: const Color(0xFF2E2A50),
               title: Text(
-                widget.language == 'en'
-                    ? 'Edit Category'
-                    : 'تعديل الفئة',
+                widget.language == 'en' ? 'Edit Category' : 'تعديل الفئة',
                 style: const TextStyle(color: Colors.white),
               ),
               content: SingleChildScrollView(
@@ -370,12 +385,10 @@ class _CategoryPageState extends State<CategoryPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CustomTextField(
-                        hintText:
-                        widget.language == 'en' ? 'Title' : 'العنوان',
+                        hintText: widget.language == 'en' ? 'Title' : 'العنوان',
                         titleController: titleController,
                         validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon:
-                        const Icon(Icons.title, color: Colors.black),
+                        prefixIcon: const Icon(Icons.title, color: Colors.black),
                       ),
                       const SizedBox(height: 15),
                       CustomTextField(
@@ -384,8 +397,8 @@ class _CategoryPageState extends State<CategoryPage> {
                             : 'وصف للذكاء الاصطناعي',
                         titleController: promptController,
                         validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon: const Icon(Icons.description,
-                            color: Colors.black),
+                        prefixIcon:
+                        const Icon(Icons.description, color: Colors.black),
                       ),
                       const SizedBox(height: 15),
                       if (selectedImage != null)
@@ -403,8 +416,8 @@ class _CategoryPageState extends State<CategoryPage> {
                           fit: BoxFit.cover,
                         ),
                       TextButton.icon(
-                        icon: const Icon(Icons.image,
-                            color: Colors.white70),
+                        icon:
+                        const Icon(Icons.image, color: Colors.white70),
                         label: Text(
                           widget.language == 'en'
                               ? 'Change Image'
@@ -415,12 +428,11 @@ class _CategoryPageState extends State<CategoryPage> {
                         onPressed: () async {
                           final picked = await ImagePicker()
                               .pickImage(source: ImageSource.gallery);
-
                           if (picked != null) {
                             final permanentPath =
                             await saveImagePermanently(
-                                File(picked.path));
-
+                              File(picked.path),
+                            );
                             setDialogState(() {
                               selectedImage = XFile(permanentPath);
                             });
@@ -439,7 +451,6 @@ class _CategoryPageState extends State<CategoryPage> {
                     style: const TextStyle(color: Colors.grey),
                   ),
                 ),
-
                 TextButton(
                   onPressed: () async {
                     categories.removeAt(index);
@@ -452,7 +463,6 @@ class _CategoryPageState extends State<CategoryPage> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-
                 ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
@@ -463,20 +473,14 @@ class _CategoryPageState extends State<CategoryPage> {
                         image: selectedImage?.path ?? '',
                         direction: category.direction,
                       );
-
                       await saveCategories(categories);
                       _updateFilteredCategories();
-
-                      titleController.clear();
-                      promptController.clear();
-                      selectedImage = null;
-
+                      _clearCategoryForm();
                       Navigator.pop(context);
                     }
                   },
-                  child: Text(
-                    widget.language == 'en' ? 'Update' : 'تحديث',
-                  ),
+                  child:
+                  Text(widget.language == 'en' ? 'Update' : 'تحديث'),
                 ),
               ],
             );
@@ -486,4 +490,63 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
+  // إنشاء الإرشادات التوضيحية
+  void _createTutorial() {
+    final targets = [
+      TargetFocus(
+        identify: 'fab',
+        keyTarget: _fabKey,
+        shape: ShapeLightFocus.Circle,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (_, _) => Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                widget.language == 'en'
+                    ? 'Click here to add a new category'
+                    : 'أضغط هنا لأضافة فئة جديدة',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: 'first_category',
+        keyTarget: _firstCategoryKey,
+        shape: ShapeLightFocus.RRect,
+        radius: 20,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (_, _) => Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                widget.language == 'en'
+                    ? 'Press and hold to edit this category'
+                    : 'اضغط مطولًا لتعديل هذه الفئة',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ];
+
+    final tutorial = TutorialCoachMark(targets: targets);
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      tutorial.show(context: context);
+    });
+  }
 }
