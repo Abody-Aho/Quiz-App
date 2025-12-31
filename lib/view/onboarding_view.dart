@@ -1,6 +1,8 @@
 import 'package:exam/view/language_selection_page.dart';
 import 'package:flutter/material.dart';
 
+import '../model/model.dart';
+
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
 
@@ -12,26 +14,26 @@ class _OnboardingViewState extends State<OnboardingView> {
   final PageController _controller = PageController();
   int currentIndex = 0;
 
-  final List<_OnboardItem> items = [
-    _OnboardItem(
+  final List<OnboardItem> items = [
+    OnboardItem(
       icon: Icons.smart_toy_outlined,
       title: "اختبارات ذكية",
       description:
       "أنشئ أسئلة واختبارات مخصصة باستخدام الذكاء الاصطناعي خلال ثوانٍ",
     ),
-    _OnboardItem(
+    OnboardItem(
       icon: Icons.category_outlined,
       title: "اختر المجال",
       description:
       "برمجة، لغات، علوم، تاريخ\nأو أضف مجالًا جديدًا بنفسك",
     ),
-    _OnboardItem(
+    OnboardItem(
       icon: Icons.psychology_alt_outlined,
       title: "تعلّم وقيّم مستواك",
       description:
       "أجب على الأسئلة واحصل على نتيجتك فورًا مع تحليل ذكي",
     ),
-    _OnboardItem(
+    OnboardItem(
       icon: Icons.rocket_launch_outlined,
       title: "ابدأ الآن",
       description:
@@ -166,16 +168,4 @@ class _OnboardingViewState extends State<OnboardingView> {
       ),
     );
   }
-}
-
-class _OnboardItem {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  _OnboardItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
 }

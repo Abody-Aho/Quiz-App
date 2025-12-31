@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'package:flutter/material.dart';
 
 class Question {
   final String text;
@@ -59,5 +59,19 @@ class Category {
     );
   }
 }
+
+
+class OnboardItem {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  OnboardItem({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+}
+
 
 
