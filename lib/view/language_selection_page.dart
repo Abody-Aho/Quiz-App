@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'category_page.dart';
@@ -13,6 +15,7 @@ class LanguageSelectionPage extends StatefulWidget {
 class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   final GlobalKey _english = GlobalKey<FormState>();
   final GlobalKey _arabic = GlobalKey<FormState>();
+  DateTime? _lastBackPressed;
 
   Future<void> _checkAndShowTutorial() async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,80 +55,101 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                key: _english,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CategoryPage(
-                        language: 'en',
-                        direction: TextDirection.ltr,
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          final now = DateTime.now();
+
+          if (_lastBackPressed == null ||
+              now.difference(_lastBackPressed!) >
+                  const Duration(seconds: 2)) {
+            _lastBackPressed = now;
+
+            Fluttertoast.showToast(
+              msg: "اضغط مرة أخرى للخروج",
+              gravity: ToastGravity.BOTTOM,
+            );
+          } else {
+            SystemNavigator.pop();
+          }
+        },
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    key: _english,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CategoryPage(
+                            language: 'en',
+                            direction: TextDirection.ltr,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(200, 200),
+                      backgroundColor: const Color(0xFF6C63FF),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 32,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(200, 200),
-                  backgroundColor: const Color(0xFF6C63FF),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 32,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "English",
-                  style: TextStyle(
-                    fontSize: 35,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                key: _arabic,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CategoryPage(
-                        language: 'ar',
-                        direction: TextDirection.rtl,
+                    child: const Text(
+                      "English",
+                      style: TextStyle(
+                        fontSize: 35,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(200, 200),
-                  backgroundColor: const Color(0xFF6C63FF),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 32,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    key: _arabic,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CategoryPage(
+                            language: 'ar',
+                            direction: TextDirection.rtl,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(200, 200),
+                      backgroundColor: const Color(0xFF6C63FF),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 32,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "عربي",
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  "عربي",
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -175,6 +199,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
     final tutorial = TutorialCoachMark(targets: targets);
 
     Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       tutorial.show(context: context);
     });
   }

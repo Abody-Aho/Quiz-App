@@ -1,6 +1,7 @@
 import 'package:exam/view/result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+
 import '../model/model.dart';
 import '../service/groq_ai_service.dart';
 import '../widget/options_widget.dart';
@@ -32,11 +33,20 @@ class _QuestionViewState extends State<QuestionView> {
 
   Future<void> loadQuestions() async {
     questions = await aiService.generateQuizByCategory(widget.category);
-    setState(() => isLoading = false);
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final int totalQuestions =
+    isLoading ? 10 : (questions.isEmpty ? 0 : questions.length);
+
+    final double progress = (isLoading || questions.isEmpty)
+        ? 0
+        : _questionNumber / questions.length;
+
     return Scaffold(
       body: Skeletonizer(
         enabled: isLoading,
@@ -59,18 +69,17 @@ class _QuestionViewState extends State<QuestionView> {
                 textDirection: widget.category.direction,
                 child: Column(
                   children: [
+                    // ================= Header =================
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_back,
                               color: Colors.white),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
+                          onPressed: () => Navigator.pop(context),
                         ),
                         Text(
-                          "Question $_questionNumber / ${isLoading ? 10 : questions.length}",
+                          "Question $_questionNumber / $totalQuestions",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -82,34 +91,46 @@ class _QuestionViewState extends State<QuestionView> {
 
                     const SizedBox(height: 10),
 
-                    // 🔹 Progress
+                    // ================= Progress =================
                     LinearProgressIndicator(
-                      value: isLoading
-                          ? null
-                          : _questionNumber / questions.length,
+                      value: progress,
                       backgroundColor: Colors.white24,
                       color: Colors.white,
                     ),
 
                     const SizedBox(height: 20),
 
+                    // ================= Content =================
                     Expanded(
-                      child: PageView.builder(
+                      child: isLoading
+                          ? buildSkeletonQuestion()
+                          : questions.isEmpty
+                          ? const Center(
+                        child: Text(
+                          "لا توجد أسئلة",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                          : PageView.builder(
                         controller: _controller,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: isLoading ? 1 : questions.length,
+                        physics:
+                        const NeverScrollableScrollPhysics(),
+                        itemCount: questions.length,
                         itemBuilder: (context, index) {
-                          return isLoading
-                              ? buildSkeletonQuestion()
-                              : buildQuestion(questions[index]);
+                          return buildQuestion(questions[index]);
                         },
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    if (!isLoading)
-                      _isLocked ? buildButton() : const SizedBox(),
+                    // ================= Button =================
+                    if (!isLoading && questions.isNotEmpty)
+                      _isLocked ? buildButton() : const SizedBox(height: 55),
                   ],
                 ),
               ),
@@ -119,6 +140,8 @@ class _QuestionViewState extends State<QuestionView> {
       ),
     );
   }
+
+  // ================= Skeleton =================
   Widget buildSkeletonQuestion() {
     return Card(
       elevation: 10,
@@ -127,23 +150,27 @@ class _QuestionViewState extends State<QuestionView> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 24, width: double.infinity),
-            const SizedBox(height: 24),
-            ...List.generate(
-              4,
-                  (index) => Container(
-                height: 50,
-                margin: const EdgeInsets.only(bottom: 16),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(height: 30, width: double.infinity, color: Colors.white),
+              const SizedBox(height: 24),
+              ...List.generate(
+                4,
+                    (index) => Container(
+                  height: 50,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  color: Colors.white,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
+  // ================= Question =================
   Widget buildQuestion(Question question) {
     return Card(
       elevation: 10,
@@ -153,28 +180,36 @@ class _QuestionViewState extends State<QuestionView> {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              question.text,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-            OptionsWidget(
-              question: question,
-              onClickedOption: (option) {
-                if (question.isLocked) return;
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      question.text,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    OptionsWidget(
+                      question: question,
+                      onClickedOption: (option) {
+                        if (question.isLocked) return;
 
-                setState(() {
-                  question.isLocked = true;
-                  question.selectedOption = option;
-                  _isLocked = true;
-                  if (option.isCorrect) _score++;
-                });
-              },
+                        setState(() {
+                          question.isLocked = true;
+                          question.selectedOption = option;
+                          _isLocked = true;
+                          if (option.isCorrect) _score++;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -182,6 +217,7 @@ class _QuestionViewState extends State<QuestionView> {
     );
   }
 
+  // ================= Button =================
   Widget buildButton() {
     return SizedBox(
       width: double.infinity,
