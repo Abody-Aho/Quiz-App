@@ -18,23 +18,40 @@ class GroqAIService {
     }
 
     final prompt = """
-Generate 10 multiple choice questions about:
+You are an expert exam designer and senior subject-matter specialist.
+
+Generate exactly 10 high-quality, advanced multiple-choice questions based on the following:
 
 Category: ${category.title}
-Topics: ${category.prompt}
+Scope and Topics: ${category.prompt}
 
-Rules:
-- Each question has exactly 4 options
-- Only ONE option is correct
-- Return ONLY JSON in a valid list format.
-- Format:
+Strict requirements:
+- Questions must be academically strong, clear, and professionally written.
+- Language must be PERFECT and grammatically correct (Arabic or English, matching the category).
+- Do NOT mix languages under any circumstances.
+- Each question must test deep understanding, not superficial facts.
+- Avoid ambiguity, vague wording, or trick questions.
+- Do NOT repeat questions, options, or concepts.
+- Each question must have EXACTLY 4 distinct options.
+- Only ONE option is correct.
+- Incorrect options must be plausible but clearly wrong.
+- Difficulty level: Medium to Hard (professional / university level).
+- Do NOT include explanations, comments, markdown, or extra text.
+
+Output rules (VERY IMPORTANT):
+- Return ONLY valid JSON.
+- JSON must be a list of exactly 10 objects.
+- Follow this format strictly:
+
 [
   {
-    "question": "text",
-    "options": ["A","B","C","D"],
+    "question": "Question text here",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctIndex": 0
   }
 ]
+
+If the output is not valid JSON, it is considered incorrect.
 """;
 
     try {

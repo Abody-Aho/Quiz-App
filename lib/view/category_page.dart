@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import '../core/class/dialogs.dart';
+import '../core/class/route_transitions.dart';
 import '../model/model.dart';
 import '../widget/categories.dart';
 import 'question_view.dart';
@@ -85,8 +87,9 @@ class _CategoryPageState extends State<CategoryPage> {
   // حفظ الفئات محليًا
   Future<void> saveCategories(List<Category> categories) async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> jsonList =
-    categories.map((c) => jsonEncode(c.toMap())).toList();
+    List<String> jsonList = categories
+        .map((c) => jsonEncode(c.toMap()))
+        .toList();
     await prefs.setStringList('categories', jsonList);
   }
 
@@ -109,8 +112,9 @@ class _CategoryPageState extends State<CategoryPage> {
   // فلترة الفئات حسب اللغة
   void _updateFilteredCategories() {
     setState(() {
-      filteredCategories =
-          categories.where((c) => c.id == widget.language).toList();
+      filteredCategories = categories
+          .where((c) => c.id == widget.language)
+          .toList();
     });
   }
 
@@ -167,8 +171,8 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => QuestionView(category: category),
+                  AppRoute.fadeSlide(
+                    QuestionView(category: category),
                   ),
                 ),
                 child: Container(
@@ -235,11 +239,11 @@ class _CategoryPageState extends State<CategoryPage> {
       child: imagePath.startsWith('asset')
           ? Image.asset(imagePath, height: 70, width: 70, fit: BoxFit.cover)
           : Image.file(
-        File(imagePath),
-        height: 70,
-        width: 70,
-        fit: BoxFit.cover,
-      ),
+              File(imagePath),
+              height: 70,
+              width: 70,
+              fit: BoxFit.cover,
+            ),
     );
   }
 
@@ -249,242 +253,345 @@ class _CategoryPageState extends State<CategoryPage> {
     selectedImage = null;
   }
 
+  String? _categoryValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return widget.language == 'en' ? 'Required field' : 'الحقل مطلوب';
+    }
+    return null;
+  }
+
   void _showAddCategoryDialog() {
-    showDialog(
+    showScaleDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF2E2A50),
-              title: Text(
-                widget.language == 'en'
-                    ? 'Add New Category'
-                    : 'إضافة فئة جديدة',
-                style: const TextStyle(color: Colors.white),
-              ),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CustomTextField(
-                        hintText: widget.language == 'en' ? 'Title' : 'العنوان',
-                        titleController: titleController,
-                        validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon: const Icon(Icons.title, color: Colors.black),
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2E2A50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              widget.language == 'en'
+                  ? 'Add New Category'
+                  : 'إضافة فئة جديدة',
+              style: const TextStyle(color: Colors.white),
+            ),
+            content: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CustomTextField(
+                      hintText:
+                      widget.language == 'en' ? 'Title' : 'العنوان',
+                      titleController: titleController,
+                      validator: _categoryValidator,
+                      prefixIcon: const Icon(Icons.title, color: Colors.black),
+                      isEnglish: widget.language == 'en',
+                      textDirection: widget.language == 'en'
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 15),
+                    CustomTextField(
+                      hintText: widget.language == 'en'
+                          ? 'Type of questions'
+                          : 'نوع الاسئلة',
+                      titleController: promptController,
+                      validator: _categoryValidator,
+                      prefixIcon:
+                      const Icon(Icons.description, color: Colors.black),
+                      isEnglish: widget.language == 'en',
+                      textDirection: widget.language == 'en'
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 15),
+                    if (selectedImage != null)
+                      selectedImage!.path.startsWith('asset')
+                          ? Image.asset(
+                        selectedImage!.path,
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      )
+                          : Image.file(
+                        File(selectedImage!.path),
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
                       ),
-                      const SizedBox(height: 15),
-                      CustomTextField(
-                        hintText: widget.language == 'en'
-                            ? 'Description'
-                            : 'وصف للذكاء الاصطناعي',
-                        titleController: promptController,
-                        validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon:
-                        const Icon(Icons.description, color: Colors.black),
+                    TextButton.icon(
+                      icon:
+                      const Icon(Icons.image, color: Colors.white70),
+                      label: Text(
+                        widget.language == 'en' ? 'Image' : 'اختر صورة',
+                        style:
+                        const TextStyle(color: Colors.white70),
                       ),
-                      const SizedBox(height: 15),
-                      if (selectedImage != null)
-                        selectedImage!.path.startsWith('asset')
-                            ? Image.asset(
-                          selectedImage!.path,
-                          height: 80,
-                          width: 80,
-                          fit: BoxFit.cover,
-                        )
-                            : Image.file(
-                          File(selectedImage!.path),
-                          height: 80,
-                          width: 80,
-                          fit: BoxFit.cover,
-                        ),
-                      TextButton.icon(
-                        icon:
-                        const Icon(Icons.image, color: Colors.white70),
-                        label: Text(
-                          widget.language == 'en' ? 'Image' : 'اختر صورة',
-                          style:
-                          const TextStyle(color: Colors.white70),
-                        ),
-                        onPressed: () async {
-                          final picked = await ImagePicker()
-                              .pickImage(source: ImageSource.gallery);
-                          if (picked != null) {
-                            final permanentPath =
-                            await saveImagePermanently(
-                              File(picked.path),
-                            );
-                            setDialogState(() {
-                              selectedImage = XFile(permanentPath);
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                      onPressed: () async {
+                        final picked = await ImagePicker().pickImage(
+                          source: ImageSource.gallery,
+                        );
+                        if (picked != null) {
+                          final permanentPath =
+                          await saveImagePermanently(
+                            File(picked.path),
+                          );
+                          setDialogState(() {
+                            selectedImage = XFile(permanentPath);
+                          });
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    widget.language == 'en' ? 'Cancel' : 'إلغاء',
-                    style: const TextStyle(color: Colors.red),
-                  ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  widget.language == 'en' ? 'Cancel' : 'إلغاء',
+                  style: const TextStyle(color: Colors.red),
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      categories.add(
-                        Category(
-                          id: widget.language,
-                          title: titleController.text,
-                          prompt: promptController.text,
-                          image: selectedImage?.path ?? '',
-                          direction: widget.direction,
-                        ),
-                      );
-                      await saveCategories(categories);
-                      _updateFilteredCategories();
-                      _clearCategoryForm();
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text(widget.language == 'en' ? 'Save' : 'حفظ'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    categories.add(
+                      Category(
+                        id: widget.language,
+                        title: titleController.text,
+                        prompt: promptController.text,
+                        image: selectedImage?.path ?? '',
+                        direction: widget.direction,
+                      ),
+                    );
+                    await saveCategories(categories);
+                    _updateFilteredCategories();
+                    _clearCategoryForm();
+                    Navigator.pop(context);
+                  }
+                },
+                child:
+                Text(widget.language == 'en' ? 'Save' : 'حفظ'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
+
 
   void _showEditCategoryDialog(Category category, int index) {
     titleController.text = category.title;
     promptController.text = category.prompt;
     selectedImage = category.image.isNotEmpty ? XFile(category.image) : null;
 
-    showDialog(
+    showScaleDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF2E2A50),
-              title: Text(
-                widget.language == 'en' ? 'Edit Category' : 'تعديل الفئة',
-                style: const TextStyle(color: Colors.white),
-              ),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CustomTextField(
-                        hintText: widget.language == 'en' ? 'Title' : 'العنوان',
-                        titleController: titleController,
-                        validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon: const Icon(Icons.title, color: Colors.black),
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF2E2A50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              widget.language == 'en' ? 'Edit Category' : 'تعديل الفئة',
+              style: const TextStyle(color: Colors.white),
+            ),
+            content: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CustomTextField(
+                      hintText:
+                      widget.language == 'en' ? 'Title' : 'العنوان',
+                      titleController: titleController,
+                      validator: _categoryValidator,
+                      prefixIcon:
+                      const Icon(Icons.title, color: Colors.black),
+                      isEnglish: widget.language == 'en',
+                      textDirection: widget.language == 'en'
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 15),
+                    CustomTextField(
+                      hintText: widget.language == 'en'
+                          ? 'Type of questions'
+                          : 'نوع الاسئلة',
+                      titleController: promptController,
+                      validator: _categoryValidator,
+                      prefixIcon: const Icon(Icons.description,
+                          color: Colors.black),
+                      isEnglish: widget.language == 'en',
+                      textDirection: widget.language == 'en'
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 15),
+                    if (selectedImage != null)
+                      selectedImage!.path.startsWith('asset')
+                          ? Image.asset(
+                        selectedImage!.path,
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      )
+                          : Image.file(
+                        File(selectedImage!.path),
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
                       ),
-                      const SizedBox(height: 15),
-                      CustomTextField(
-                        hintText: widget.language == 'en'
-                            ? 'Description'
-                            : 'وصف للذكاء الاصطناعي',
-                        titleController: promptController,
-                        validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        prefixIcon:
-                        const Icon(Icons.description, color: Colors.black),
+                    TextButton.icon(
+                      icon: const Icon(Icons.image,
+                          color: Colors.white70),
+                      label: Text(
+                        widget.language == 'en'
+                            ? 'Change Image'
+                            : 'تغيير الصورة',
+                        style: const TextStyle(color: Colors.white70),
                       ),
-                      const SizedBox(height: 15),
-                      if (selectedImage != null)
-                        selectedImage!.path.startsWith('asset')
-                            ? Image.asset(
-                          selectedImage!.path,
-                          height: 80,
-                          width: 80,
-                          fit: BoxFit.cover,
-                        )
-                            : Image.file(
-                          File(selectedImage!.path),
-                          height: 80,
-                          width: 80,
-                          fit: BoxFit.cover,
-                        ),
-                      TextButton.icon(
-                        icon:
-                        const Icon(Icons.image, color: Colors.white70),
-                        label: Text(
-                          widget.language == 'en'
-                              ? 'Change Image'
-                              : 'تغيير الصورة',
-                          style:
-                          const TextStyle(color: Colors.white70),
-                        ),
-                        onPressed: () async {
-                          final picked = await ImagePicker()
-                              .pickImage(source: ImageSource.gallery);
-                          if (picked != null) {
-                            final permanentPath =
-                            await saveImagePermanently(
-                              File(picked.path),
-                            );
-                            setDialogState(() {
-                              selectedImage = XFile(permanentPath);
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                      onPressed: () async {
+                        final picked =
+                        await ImagePicker().pickImage(
+                          source: ImageSource.gallery,
+                        );
+                        if (picked != null) {
+                          final permanentPath =
+                          await saveImagePermanently(
+                            File(picked.path),
+                          );
+                          setDialogState(() {
+                            selectedImage =
+                                XFile(permanentPath);
+                          });
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    widget.language == 'en' ? 'Cancel' : 'إلغاء',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  widget.language == 'en' ? 'Cancel' : 'إلغاء',
+                  style: const TextStyle(color: Colors.grey),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    categories.removeAt(index);
-                    await saveCategories(categories);
-                    _updateFilteredCategories();
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    widget.language == 'en' ? 'Delete' : 'حذف',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      categories[index] = Category(
-                        id: category.id,
-                        title: titleController.text,
-                        prompt: promptController.text,
-                        image: selectedImage?.path ?? '',
-                        direction: category.direction,
-                      );
+              ),
+              TextButton(
+                onPressed: () {
+                  showDeleteConfirmDialog(
+                    context: context,
+                    language: widget.language,
+                    onConfirm: () async {
+                      categories.removeAt(index);
                       await saveCategories(categories);
                       _updateFilteredCategories();
-                      _clearCategoryForm();
-                      Navigator.pop(context);
-                    }
-                  },
-                  child:
-                  Text(widget.language == 'en' ? 'Update' : 'تحديث'),
+                      Navigator.pop(context); // إغلاق Dialog التعديل
+                    },
+                  );
+                },
+                child: Text(
+                  widget.language == 'en' ? 'Delete' : 'حذف',
+                  style: const TextStyle(color: Colors.red),
                 ),
-              ],
-            );
-          },
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    categories[index] = Category(
+                      id: category.id,
+                      title: titleController.text,
+                      prompt: promptController.text,
+                      image: selectedImage?.path ?? '',
+                      direction: category.direction,
+                    );
+                    await saveCategories(categories);
+                    _updateFilteredCategories();
+                    _clearCategoryForm();
+                    Navigator.pop(context);
+                  }
+                },
+                child:
+                Text(widget.language == 'en' ? 'Update' : 'تحديث'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> showDeleteConfirmDialog({
+    required BuildContext context,
+    required VoidCallback onConfirm,
+    required String language,
+  }) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2E2A50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              const SizedBox(width: 8),
+              Text(
+                language == 'en' ? 'Delete' : 'تأكيد الحذف',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            language == 'en'
+                ? 'Are you sure you want to delete this category?'
+                : 'هل أنت متأكد من حذف هذه الفئة؟',
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                language == 'en' ? 'Cancel' : 'إلغاء',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                onConfirm();
+              },
+              child: Text(
+                language == 'en' ? 'Delete' : 'حذف',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -508,9 +615,10 @@ class _CategoryPageState extends State<CategoryPage> {
                     : 'أضغط هنا لأضافة فئة جديدة',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -532,9 +640,10 @@ class _CategoryPageState extends State<CategoryPage> {
                     : 'اضغط مطولًا لتعديل هذه الفئة',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

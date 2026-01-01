@@ -2,6 +2,7 @@ import 'package:exam/view/result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../core/class/route_transitions.dart';
 import '../model/model.dart';
 import '../service/groq_ai_service.dart';
 import '../widget/options_widget.dart';
@@ -243,9 +244,11 @@ class _QuestionViewState extends State<QuestionView> {
           } else {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    ResultPage(score: _score, total: questions.length),
+              AppRoute.fadeSlide(
+                ResultPage(
+                  score: _score,
+                  total: questions.length,
+                ),
               ),
             );
           }

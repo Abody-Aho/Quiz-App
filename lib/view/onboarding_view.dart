@@ -1,6 +1,5 @@
 import 'package:exam/view/language_selection_page.dart';
 import 'package:flutter/material.dart';
-
 import '../model/model.dart';
 
 class OnboardingView extends StatefulWidget {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import '../core/class/route_transitions.dart';
 import 'category_page.dart';
 
 class LanguageSelectionPage extends StatefulWidget {
@@ -85,8 +86,8 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => CategoryPage(
+                        AppRoute.fadeSlide(
+                          CategoryPage(
                             language: 'en',
                             direction: TextDirection.ltr,
                           ),
@@ -119,8 +120,8 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => CategoryPage(
+                        AppRoute.fadeSlide(
+                          CategoryPage(
                             language: 'ar',
                             direction: TextDirection.rtl,
                           ),

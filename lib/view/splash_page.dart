@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/class/route_transitions.dart';
 import 'language_selection_page.dart';
 import 'onboarding_view.dart';
 
@@ -28,12 +29,12 @@ class _SplashPageState extends State<SplashPage> {
       await prefs.setBool('isFirstTime', false);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const OnboardingView()),
+        AppRoute.fadeSlide(const OnboardingView()),
       );
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+        AppRoute.fadeSlide(const LanguageSelectionPage()),
       );
     }
   }
