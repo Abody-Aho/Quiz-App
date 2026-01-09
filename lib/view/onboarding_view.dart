@@ -1,6 +1,6 @@
-import 'package:exam/view/language_selection_page.dart';
 import 'package:flutter/material.dart';
 import '../model/model.dart';
+import 'login_page.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -145,7 +145,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       } else {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+                          MaterialPageRoute(builder: (_) =>  LoginPage()),
                         );
                       }
                     },

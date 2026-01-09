@@ -8,6 +8,8 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final bool isEnglish;
   final TextDirection textDirection;
+  final int length;
+
 
   const CustomTextField({
     super.key,
@@ -16,13 +18,22 @@ class CustomTextField extends StatelessWidget {
     required this.validator,
     required this.prefixIcon,
     required this.isEnglish,
-    required this.textDirection,
+    required this.textDirection, required this.length,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: titleController,
+      maxLength: length,
+      maxLengthEnforcement: MaxLengthEnforcement.enforced,
+      buildCounter: (
+          context, {
+            required int currentLength,
+            required bool isFocused,
+            int? maxLength,
+          }) =>
+      null,
       style: const TextStyle(color: Colors.black),
       textDirection: textDirection,
       textAlign: textDirection == TextDirection.rtl

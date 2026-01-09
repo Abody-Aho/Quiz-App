@@ -8,7 +8,7 @@ import '../model/model.dart';
 import '../secrets.dart';
 
 class GroqAIService {
-  Future<List<Question>> generateQuizByCategory(Category category) async {
+  Future<List<Question>> generateQuizByCategory(Category category,String level,) async {
     if (!await checkIConnection()) {
       Fluttertoast.showToast(
         msg: "لا يوجد اتصال بالإنترنت",
@@ -20,28 +20,35 @@ class GroqAIService {
     final prompt = """
 You are an expert exam designer and senior subject-matter specialist.
 
-Generate exactly 10 high-quality, advanced multiple-choice questions based on the following:
+Your task is to generate EXACTLY 10 high-quality multiple-choice questions strictly according to the provided difficulty level.
 
-Category: ${category.title}
-Scope and Topics: ${category.prompt}
+Category:
+${category.title}
 
-Strict requirements:
-- Questions must be academically strong, clear, and professionally written.
-- Language must be PERFECT and grammatically correct (Arabic or English, matching the category).
+Scope and Topics:
+${category.prompt}
+
+Difficulty Level (MANDATORY):
+$level
+
+Rules and constraints:
+- The difficulty of ALL questions must strictly follow the provided difficulty level.
+- Questions must be academically strong, clear, precise, and professionally written.
+- The language must be PERFECT and grammatically correct.
+- Use ONLY ONE language (Arabic or English) matching the category language.
 - Do NOT mix languages under any circumstances.
-- Each question must test deep understanding, not superficial facts.
-- Avoid ambiguity, vague wording, or trick questions.
-- Do NOT repeat questions, options, or concepts.
-- Each question must have EXACTLY 4 distinct options.
+- Questions must test real understanding, reasoning, and application (not memorization unless the level requires it).
+- Avoid ambiguity, vague phrasing, trick questions, or misleading wording.
+- Do NOT repeat questions, concepts, or answer options.
+- Each question must have EXACTLY 4 distinct answer options.
 - Only ONE option is correct.
-- Incorrect options must be plausible but clearly wrong.
-- Difficulty level: Medium to Hard (professional / university level).
-- Do NOT include explanations, comments, markdown, or extra text.
+- Incorrect options must be realistic, logical, and clearly incorrect.
+- Do NOT include explanations, hints, markdown, comments, or extra text.
 
-Output rules (VERY IMPORTANT):
+Output format rules (CRITICAL):
 - Return ONLY valid JSON.
-- JSON must be a list of exactly 10 objects.
-- Follow this format strictly:
+- The output must be a JSON array of EXACTLY 10 objects.
+- Follow this structure STRICTLY:
 
 [
   {
@@ -51,8 +58,9 @@ Output rules (VERY IMPORTANT):
   }
 ]
 
-If the output is not valid JSON, it is considered incorrect.
+Any output that is not valid JSON or does not follow the exact structure is considered incorrect.
 """;
+
 
     try {
       final res = await http.post(

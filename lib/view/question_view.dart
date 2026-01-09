@@ -9,7 +9,9 @@ import '../widget/options_widget.dart';
 
 class QuestionView extends StatefulWidget {
   final Category category;
-  const QuestionView({super.key, required this.category});
+  final String language;
+  final String level;
+  const QuestionView({super.key, required this.category, required this.language, required this.level});
 
   @override
   State<QuestionView> createState() => _QuestionViewState();
@@ -21,7 +23,6 @@ class _QuestionViewState extends State<QuestionView> {
 
   List<Question> questions = [];
   bool isLoading = true;
-  bool _isLocked = false;
 
   int _questionNumber = 1;
   int _score = 0;
@@ -33,7 +34,7 @@ class _QuestionViewState extends State<QuestionView> {
   }
 
   Future<void> loadQuestions() async {
-    questions = await aiService.generateQuizByCategory(widget.category);
+    questions = await aiService.generateQuizByCategory(widget.category,widget.level);
     if (mounted) {
       setState(() => isLoading = false);
     }
@@ -129,9 +130,13 @@ class _QuestionViewState extends State<QuestionView> {
 
                     const SizedBox(height: 20),
 
-                    // ================= Button =================
-                    if (!isLoading && questions.isNotEmpty)
-                      _isLocked ? buildButton() : const SizedBox(height: 55),
+                    // ================= Next Button =================
+                    if (!isLoading &&
+                        questions.isNotEmpty &&
+                        questions[_questionNumber - 1].isConfirmed)
+                      buildButton()
+                    else
+                      const SizedBox(height: 55),
                   ],
                 ),
               ),
@@ -151,21 +156,19 @@ class _QuestionViewState extends State<QuestionView> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(height: 30, width: double.infinity, color: Colors.white),
-              const SizedBox(height: 24),
-              ...List.generate(
-                4,
-                    (index) => Container(
-                  height: 50,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  color: Colors.white,
-                ),
+        child: Column(
+          children: [
+            Container(height: 30, width: double.infinity, color: Colors.white),
+            const SizedBox(height: 24),
+            ...List.generate(
+              4,
+                  (index) => Container(
+                height: 50,
+                margin: const EdgeInsets.only(bottom: 16),
+                color: Colors.white,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -195,19 +198,51 @@ class _QuestionViewState extends State<QuestionView> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
+                    // ================= Options =================
                     OptionsWidget(
                       question: question,
                       onClickedOption: (option) {
-                        if (question.isLocked) return;
+                        if (question.isConfirmed) return;
 
                         setState(() {
-                          question.isLocked = true;
                           question.selectedOption = option;
-                          _isLocked = true;
-                          if (option.isCorrect) _score++;
                         });
                       },
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // ================= Confirm Button =================
+                    if (question.selectedOption != null &&
+                        !question.isConfirmed)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple.shade900,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              question.isConfirmed = true;
+                              if (question.selectedOption!.isCorrect) {
+                                _score++;
+                              }
+                            });
+                          },
+                          child: Text(
+                            widget.language == 'en'
+                                ? "Confirm Answer" : "تأكيد الاجابة",
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -218,7 +253,7 @@ class _QuestionViewState extends State<QuestionView> {
     );
   }
 
-  // ================= Button =================
+  // ================= Next Button =================
   Widget buildButton() {
     return SizedBox(
       width: double.infinity,
@@ -239,7 +274,6 @@ class _QuestionViewState extends State<QuestionView> {
             );
             setState(() {
               _questionNumber++;
-              _isLocked = false;
             });
           } else {
             Navigator.pushReplacement(

@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 class Question {
   final String text;
   final List<Option> options;
-  bool isLocked;
   Option? selectedOption;
+  bool isConfirmed;
 
   Question({
     required this.text,
     required this.options,
-    this.isLocked = false,
     this.selectedOption,
+    this.isConfirmed = false,
   });
 }
 
@@ -18,15 +18,14 @@ class Option {
   final String text;
   final bool isCorrect;
 
-  Option({
-    required this.text,
-    required this.isCorrect,
-  });
+  Option({required this.text, required this.isCorrect});
 }
+
 class Category {
   final String id;
   final String title;
   final String prompt;
+   late String level;
   final String image;
   final TextDirection direction;
 
@@ -54,12 +53,12 @@ class Category {
       title: map['title'],
       prompt: map['prompt'],
       image: map['image'],
-      direction:
-      map['direction'] == 'rtl' ? TextDirection.rtl : TextDirection.ltr,
+      direction: map['direction'] == 'rtl'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
     );
   }
 }
-
 
 class OnboardItem {
   final IconData icon;
@@ -72,6 +71,3 @@ class OnboardItem {
     required this.description,
   });
 }
-
-
-

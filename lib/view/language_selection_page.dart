@@ -1,3 +1,5 @@
+import 'package:exam/view/profile_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -14,6 +16,10 @@ class LanguageSelectionPage extends StatefulWidget {
 }
 
 class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
+  final user = FirebaseAuth.instance.currentUser;
+
+  late String imageUrl = user?.photoURL ?? "";
+
   final GlobalKey _english = GlobalKey<FormState>();
   final GlobalKey _arabic = GlobalKey<FormState>();
   DateTime? _lastBackPressed;
@@ -41,6 +47,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1A40),
+      drawer: Drawer(child: ProfilePage(),),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,

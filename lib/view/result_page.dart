@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart'
     show ConfettiController, ConfettiWidget, BlastDirectionality;
 import 'package:flutter/material.dart';
+import '../service/statistics_service.dart';
 
 class ResultPage extends StatefulWidget {
   final int score;
@@ -18,6 +19,12 @@ class _ResultPageState extends State<ResultPage> {
   @override
   void initState() {
     super.initState();
+    final statisticsService = StatisticsService();
+    statisticsService.saveResult(
+      correct: widget.score,
+      wrong: widget.total - widget.score,
+    );
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
@@ -53,7 +60,7 @@ class _ResultPageState extends State<ResultPage> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                colors: [Color(0xff1D2671), Color(0xffC33764)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -106,12 +113,11 @@ class _ResultPageState extends State<ResultPage> {
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purpleAccent,
+                            backgroundColor: Colors.purple.shade800,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
-                            elevation: 6,
                           ),
                           onPressed: () {
                             Navigator.pop(context);

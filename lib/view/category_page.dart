@@ -169,12 +169,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   category,
                   categories.indexOf(category),
                 ),
-                onTap: () => Navigator.push(
-                  context,
-                  AppRoute.fadeSlide(
-                    QuestionView(category: category),
-                  ),
-                ),
+                onTap: () => _showDifficultyDialog(context, category),
                 child: Container(
                   key: index == 0 ? _firstCategoryKey : null,
                   decoration: BoxDecoration(
@@ -218,6 +213,154 @@ class _CategoryPageState extends State<CategoryPage> {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  void _showDifficultyDialog(BuildContext context, Category category) {
+    const Color primaryPurple = Color(0xFF6C63FF);
+    const Color lightPurple = Color(0xFFF3F2FF);
+
+    showScaleDialog(
+      context: context,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFF2E2A55),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // العنوان
+              Text(
+                widget.language == 'en'
+                    ? "Choose Difficulty"
+                    : "اختر مستوى الصعوبة",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ===== سهل =====
+              _difficultyButton(
+                title: widget.language == 'en' ? "Easy" : "سهل",
+                color: primaryPurple,
+                background: lightPurple,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    AppRoute.fadeSlide(
+                      QuestionView(
+                        category: category,
+                        language: widget.language,
+                        level:
+                            "Easy: basic and introductory questions suitable for beginners.",
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // ===== متوسط =====
+              _difficultyButton(
+                title: widget.language == 'en' ? "Medium" : "متوسط",
+                color: primaryPurple,
+                background: lightPurple,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    AppRoute.fadeSlide(
+                      QuestionView(
+                        category: category,
+                        language: widget.language,
+                        level:
+                            "Medium: moderately challenging questions that require solid understanding.",
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // ===== صعب =====
+              _difficultyButton(
+                title: widget.language == 'en' ? "Hard" :"صعب",
+                color: Colors.white,
+                background: primaryPurple,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    AppRoute.fadeSlide(
+                      QuestionView(
+                        category: category,
+                        language: widget.language,
+                        level:
+                            "Hard: advanced questions that test deep knowledge and analytical thinking.",
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // ===== صعب جداً =====
+              _difficultyButton(
+                title: widget.language == 'en' ? "Very Hard" :"صعب جداً",
+                color: Colors.white,
+                background: const Color(0xFF4A43D1),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    AppRoute.fadeSlide(
+                      QuestionView(
+                        category: category,
+                        language: widget.language,
+                        level:
+                            "Very Hard: expert-level, complex, and highly analytical questions.",
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _difficultyButton({
+    required String title,
+    required Color color,
+    required Color background,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: background,
+            foregroundColor: color,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
     );
   }
 
@@ -271,10 +414,8 @@ class _CategoryPageState extends State<CategoryPage> {
               borderRadius: BorderRadius.circular(20),
             ),
             title: Text(
-              widget.language == 'en'
-                  ? 'Add New Category'
-                  : 'إضافة فئة جديدة',
-              style: const TextStyle(color: Colors.white),
+              widget.language == 'en' ? 'Add New Category' : 'إضافة فئة جديدة',
+              style: const TextStyle(color: Colors.white),textAlign: TextAlign.center,
             ),
             content: SingleChildScrollView(
               child: Form(
@@ -283,8 +424,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CustomTextField(
-                      hintText:
-                      widget.language == 'en' ? 'Title' : 'العنوان',
+                      hintText: widget.language == 'en' ? 'Title' : 'العنوان',
                       titleController: titleController,
                       validator: _categoryValidator,
                       prefixIcon: const Icon(Icons.title, color: Colors.black),
@@ -292,6 +432,7 @@ class _CategoryPageState extends State<CategoryPage> {
                       textDirection: widget.language == 'en'
                           ? TextDirection.ltr
                           : TextDirection.rtl,
+                      length: 50,
                     ),
                     const SizedBox(height: 15),
                     CustomTextField(
@@ -300,43 +441,43 @@ class _CategoryPageState extends State<CategoryPage> {
                           : 'نوع الاسئلة',
                       titleController: promptController,
                       validator: _categoryValidator,
-                      prefixIcon:
-                      const Icon(Icons.description, color: Colors.black),
+                      prefixIcon: const Icon(
+                        Icons.description,
+                        color: Colors.black,
+                      ),
                       isEnglish: widget.language == 'en',
                       textDirection: widget.language == 'en'
                           ? TextDirection.ltr
                           : TextDirection.rtl,
+                      length: 250,
                     ),
                     const SizedBox(height: 15),
                     if (selectedImage != null)
                       selectedImage!.path.startsWith('asset')
                           ? Image.asset(
-                        selectedImage!.path,
-                        height: 80,
-                        width: 80,
-                        fit: BoxFit.cover,
-                      )
+                              selectedImage!.path,
+                              height: 80,
+                              width: 80,
+                              fit: BoxFit.cover,
+                            )
                           : Image.file(
-                        File(selectedImage!.path),
-                        height: 80,
-                        width: 80,
-                        fit: BoxFit.cover,
-                      ),
+                              File(selectedImage!.path),
+                              height: 80,
+                              width: 80,
+                              fit: BoxFit.cover,
+                            ),
                     TextButton.icon(
-                      icon:
-                      const Icon(Icons.image, color: Colors.white70),
+                      icon: const Icon(Icons.image, color: Colors.white70),
                       label: Text(
                         widget.language == 'en' ? 'Image' : 'اختر صورة',
-                        style:
-                        const TextStyle(color: Colors.white70),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                       onPressed: () async {
                         final picked = await ImagePicker().pickImage(
                           source: ImageSource.gallery,
                         );
                         if (picked != null) {
-                          final permanentPath =
-                          await saveImagePermanently(
+                          final permanentPath = await saveImagePermanently(
                             File(picked.path),
                           );
                           setDialogState(() {
@@ -375,8 +516,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     Navigator.pop(context);
                   }
                 },
-                child:
-                Text(widget.language == 'en' ? 'Save' : 'حفظ'),
+                child: Text(widget.language == 'en' ? 'Save' : 'حفظ'),
               ),
             ],
           );
@@ -384,7 +524,6 @@ class _CategoryPageState extends State<CategoryPage> {
       ),
     );
   }
-
 
   void _showEditCategoryDialog(Category category, int index) {
     titleController.text = category.title;
@@ -402,7 +541,7 @@ class _CategoryPageState extends State<CategoryPage> {
             ),
             title: Text(
               widget.language == 'en' ? 'Edit Category' : 'تعديل الفئة',
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),textAlign: TextAlign.center,
             ),
             content: SingleChildScrollView(
               child: Form(
@@ -411,16 +550,15 @@ class _CategoryPageState extends State<CategoryPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CustomTextField(
-                      hintText:
-                      widget.language == 'en' ? 'Title' : 'العنوان',
+                      hintText: widget.language == 'en' ? 'Title' : 'العنوان',
                       titleController: titleController,
                       validator: _categoryValidator,
-                      prefixIcon:
-                      const Icon(Icons.title, color: Colors.black),
+                      prefixIcon: const Icon(Icons.title, color: Colors.black),
                       isEnglish: widget.language == 'en',
                       textDirection: widget.language == 'en'
                           ? TextDirection.ltr
                           : TextDirection.rtl,
+                      length: 50,
                     ),
                     const SizedBox(height: 15),
                     CustomTextField(
@@ -429,31 +567,33 @@ class _CategoryPageState extends State<CategoryPage> {
                           : 'نوع الاسئلة',
                       titleController: promptController,
                       validator: _categoryValidator,
-                      prefixIcon: const Icon(Icons.description,
-                          color: Colors.black),
+                      prefixIcon: const Icon(
+                        Icons.description,
+                        color: Colors.black,
+                      ),
                       isEnglish: widget.language == 'en',
                       textDirection: widget.language == 'en'
                           ? TextDirection.ltr
                           : TextDirection.rtl,
+                      length: 250,
                     ),
                     const SizedBox(height: 15),
                     if (selectedImage != null)
                       selectedImage!.path.startsWith('asset')
                           ? Image.asset(
-                        selectedImage!.path,
-                        height: 80,
-                        width: 80,
-                        fit: BoxFit.cover,
-                      )
+                              selectedImage!.path,
+                              height: 80,
+                              width: 80,
+                              fit: BoxFit.cover,
+                            )
                           : Image.file(
-                        File(selectedImage!.path),
-                        height: 80,
-                        width: 80,
-                        fit: BoxFit.cover,
-                      ),
+                              File(selectedImage!.path),
+                              height: 80,
+                              width: 80,
+                              fit: BoxFit.cover,
+                            ),
                     TextButton.icon(
-                      icon: const Icon(Icons.image,
-                          color: Colors.white70),
+                      icon: const Icon(Icons.image, color: Colors.white70),
                       label: Text(
                         widget.language == 'en'
                             ? 'Change Image'
@@ -461,18 +601,15 @@ class _CategoryPageState extends State<CategoryPage> {
                         style: const TextStyle(color: Colors.white70),
                       ),
                       onPressed: () async {
-                        final picked =
-                        await ImagePicker().pickImage(
+                        final picked = await ImagePicker().pickImage(
                           source: ImageSource.gallery,
                         );
                         if (picked != null) {
-                          final permanentPath =
-                          await saveImagePermanently(
+                          final permanentPath = await saveImagePermanently(
                             File(picked.path),
                           );
                           setDialogState(() {
-                            selectedImage =
-                                XFile(permanentPath);
+                            selectedImage = XFile(permanentPath);
                           });
                         }
                       },
@@ -498,7 +635,7 @@ class _CategoryPageState extends State<CategoryPage> {
                       categories.removeAt(index);
                       await saveCategories(categories);
                       _updateFilteredCategories();
-                      Navigator.pop(context); // إغلاق Dialog التعديل
+                      Navigator.pop(context);
                     },
                   );
                 },
@@ -523,8 +660,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     Navigator.pop(context);
                   }
                 },
-                child:
-                Text(widget.language == 'en' ? 'Update' : 'تحديث'),
+                child: Text(widget.language == 'en' ? 'Update' : 'تحديث'),
               ),
             ],
           );
