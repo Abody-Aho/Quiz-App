@@ -78,101 +78,103 @@ class _ProfilePageState extends State<ProfilePage> {
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 40),
-                    CircleAvatar(
-                      radius: 55,
-                      backgroundColor: Colors.white,
-                      backgroundImage: imageUrl.isNotEmpty
-                          ? NetworkImage(imageUrl)
-                          : null,
-                      child: imageUrl.isEmpty
-                          ? const Icon(
-                              Icons.person,
-                              size: 55,
-                              color: Colors.purple,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      email,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 40),
+                      CircleAvatar(
+                        radius: 55,
+                        backgroundColor: Colors.white,
+                        backgroundImage: imageUrl.isNotEmpty
+                            ? NetworkImage(imageUrl)
+                            : null,
+                        child: imageUrl.isEmpty
+                            ? const Icon(
+                                Icons.person,
+                                size: 55,
+                                color: Colors.purple,
+                              )
+                            : null,
                       ),
-                    ),
-                    if (isGuest)
-                      Container(
-                        margin: const EdgeInsets.only(top: 14, bottom: 10),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
+                      const SizedBox(height: 12),
+                      Text(
+                        email,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                      if (isGuest)
+                        Container(
+                          margin: const EdgeInsets.only(top: 14, bottom: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Icon(
+                                Icons.info_outline,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ],
                           ),
                         ),
-                        child: const Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                ),
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Icon(
-                              Icons.info_outline,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ],
+                      const SizedBox(height: 20),
+                      _buildStatCard(
+                        title: "Correct Answers",
+                        value: correct,
+                        icon: Icons.check_circle,
+                        color: Colors.greenAccent,
+                        size: 15.5,
+                      ),
+                      _buildStatCard(
+                        title: "Wrong Answers",
+                        value: wrong,
+                        icon: Icons.cancel,
+                        color: Colors.redAccent,
+                        size: 15.5,
+                      ),
+                      const SizedBox(height: 25),
+                      if (isGuest)
+                        _buildGoogleButton(
+                          text: "Google تسجيل الدخول باستخدام",
+                          onTap: () async {
+                            final user = await authService.signInWithGoogle();
+                            if (user != null) {
+                              setState(() => isLoading = true);
+                              await _loadUserData();
+                            }
+                          },
                         ),
-                      ),
-                    const SizedBox(height: 20),
-                    _buildStatCard(
-                      title: "Correct Answers",
-                      value: correct,
-                      icon: Icons.check_circle,
-                      color: Colors.greenAccent,
-                      size: 15.5,
-                    ),
-                    _buildStatCard(
-                      title: "Wrong Answers",
-                      value: wrong,
-                      icon: Icons.cancel,
-                      color: Colors.redAccent,
-                      size: 15.5,
-                    ),
-                    const SizedBox(height: 25),
-                    if (isGuest)
-                      _buildGoogleButton(
-                        text: "Google تسجيل الدخول باستخدام",
-                        onTap: () async {
-                          final user = await authService.signInWithGoogle();
-                          if (user != null) {
-                            setState(() => isLoading = true);
-                            await _loadUserData();
-                          }
-                        },
-                      ),
-                    if (!isGuest)
-                      _buildLogoutButton(
-                        onTap: () async {
-                          showDeleteConfirmDialog(context: context);
-                        },
-                      ),
-                  ],
+                      if (!isGuest)
+                        _buildLogoutButton(
+                          onTap: () async {
+                            showDeleteConfirmDialog(context: context);
+                          },
+                        ),
+                    ],
+                  ),
                 ),
               ),
       ),
