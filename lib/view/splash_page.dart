@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../core/class/route_transitions.dart';
 import 'language_selection_page.dart';
 import 'onboarding_view.dart';
 
-
+// ================= Splash Page =================
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -14,6 +15,8 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+
+  // ================= Lifecycle =================
   @override
   void initState() {
     super.initState();
@@ -21,6 +24,8 @@ class _SplashPageState extends State<SplashPage> {
       _checkFirstTime();
     });
   }
+
+  // ================= First Time Check =================
   Future<void> _checkFirstTime() async {
     final prefs = await SharedPreferences.getInstance();
     final bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
@@ -39,15 +44,16 @@ class _SplashPageState extends State<SplashPage> {
     }
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F123A),
       body: Center(
         child: CircleAvatar(
-          backgroundImage:  const AssetImage('asset/images/quiz2.jpg'),
+          backgroundImage: const AssetImage('asset/images/quiz2.jpg'),
           radius: 80,
-         ),
+        ),
       ),
     );
   }

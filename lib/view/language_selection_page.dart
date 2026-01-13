@@ -8,6 +8,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../core/class/route_transitions.dart';
 import 'category_page.dart';
 
+// ================= Language Selection Page =================
 class LanguageSelectionPage extends StatefulWidget {
   const LanguageSelectionPage({super.key});
 
@@ -16,17 +17,19 @@ class LanguageSelectionPage extends StatefulWidget {
 }
 
 class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
-  final user = FirebaseAuth.instance.currentUser;
 
+  // ================= User Data =================
+  final user = FirebaseAuth.instance.currentUser;
   late String imageUrl = user?.photoURL ?? "";
 
+  // ================= Keys & State =================
   final GlobalKey _english = GlobalKey<FormState>();
   final GlobalKey _arabic = GlobalKey<FormState>();
   DateTime? _lastBackPressed;
 
+  // ================= Tutorial Check =================
   Future<void> _checkAndShowTutorial() async {
     final prefs = await SharedPreferences.getInstance();
-
     final bool isTutorialShown =
         prefs.getBool('language_tutorial_shown') ?? false;
 
@@ -36,18 +39,18 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
     }
   }
 
-
   @override
   void initState() {
     super.initState();
     _checkAndShowTutorial();
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1E1A40),
-      drawer: Drawer(child: ProfilePage(),),
+      drawer: Drawer(child: ProfilePage()),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -65,6 +68,8 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
       ),
       body: PopScope(
         canPop: false,
+
+        // ================= Exit Handling =================
         onPopInvokedWithResult: (didPop, result) {
           final now = DateTime.now();
 
@@ -88,6 +93,8 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+
+                  // ================= English Button =================
                   ElevatedButton(
                     key: _english,
                     onPressed: () {
@@ -121,7 +128,10 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 20),
+
+                  // ================= Arabic Button =================
                   ElevatedButton(
                     key: _arabic,
                     onPressed: () {
@@ -164,16 +174,17 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
     );
   }
 
+  // ================= Tutorial Coach Mark =================
   void _createTutorial() {
     final targets = [
       TargetFocus(
-        identify: "elevatedButton",
+        identify: "english_button",
         keyTarget: _english,
         alignSkip: Alignment.topCenter,
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            builder: (context, controller) => Text(
+            builder: (context, controller) => const Text(
               "Choose your English test language here",
               style: TextStyle(
                 fontSize: 20,
@@ -184,15 +195,14 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
           ),
         ],
       ),
-
       TargetFocus(
-        identify: "elevatedButton",
+        identify: "arabic_button",
         keyTarget: _arabic,
         alignSkip: Alignment.topCenter,
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            builder: (context, controller) => Text(
+            builder: (context, controller) => const Text(
               "أختار لغة الاختبار العربي من هنا",
               style: TextStyle(
                 fontSize: 20,
@@ -204,6 +214,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         ],
       ),
     ];
+
     final tutorial = TutorialCoachMark(targets: targets);
 
     Future.delayed(const Duration(milliseconds: 500), () {

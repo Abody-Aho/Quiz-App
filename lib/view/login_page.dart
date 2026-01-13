@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exam/view/language_selection_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../core/class/route_transitions.dart';
 import '../service/auth_service.dart';
 
+// ================= Login Page =================
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -10,9 +14,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // ================= Services & State =================
   final AuthService authService = AuthService();
   bool isLoading = false;
 
+  // ================= Google Sign-In =================
   Future<void> _signInWithGoogle() async {
     if (isLoading) return;
     setState(() => isLoading = true);
@@ -22,30 +28,51 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (user != null) {
+      await saveGoogleUser(user);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => const LanguageSelectionPage(),
-        ),
+        AppRoute.fadeSlide(const LanguageSelectionPage()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("لم يتم تسجيل الدخول")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("لم يتم تسجيل الدخول")));
     }
 
     setState(() => isLoading = false);
   }
+  Future<void> saveGoogleUser(User user) async {
+    final doc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid);
 
+    final snapshot = await doc.get();
+
+    if (!snapshot.exists) {
+      await doc.set({
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+        'correctAnswers': 0,
+        'wrongAnswers': 0,
+      });
+    } else {
+      await doc.update({
+        'displayName': user.displayName,
+        'photoURL': user.photoURL,
+      });
+    }
+  }
+
+
+  // ================= Guest Flow =================
   void _continueAsGuest() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => const LanguageSelectionPage(),
-      ),
+      AppRoute.fadeSlide(const LanguageSelectionPage()),
     );
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,10 +81,7 @@ class _LoginPageState extends State<LoginPage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF4A148C),
-              Color(0xFF6A1B9A),
-            ],
+            colors: [Color(0xff1D2671), Color(0xffC33764)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -70,10 +94,7 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(26),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 28,
-                vertical: 36,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -89,21 +110,17 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 22),
                   const Text(
                     "مرحبًا بك",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     "سجّل الدخول لحفظ تقدمك ومزامنة نتائجك\nأو تابع كضيف",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.black54),
                   ),
                   const SizedBox(height: 28),
+
+                  // ================= Google Button =================
                   InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: isLoading ? null : _signInWithGoogle,
@@ -111,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6A1B9A),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -124,35 +141,38 @@ class _LoginPageState extends State<LoginPage> {
                       child: Center(
                         child: isLoading
                             ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.purple,
+                                ),
+                              )
                             : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              "asset/images/google2.png",
-                              height: 22,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              "تسجيل الدخول باستخدام Google",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "asset/images/google2.png",
+                                    height: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    "Google تسجيل الدخول باستخدام ",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 18),
+
+                  // ================= Guest Button =================
                   TextButton(
                     onPressed: _continueAsGuest,
                     child: const Text(

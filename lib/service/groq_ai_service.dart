@@ -1,26 +1,27 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:exam/service/connectivity_service.dart';
+import 'package:exam/service/quiz_cache_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
-
-import '../core/class/config.dart';
 import '../model/model.dart';
 import '../secrets.dart';
 
 class GroqAIService {
-  Future<List<Question>> generateQuizByCategory(Category category,String level,) async {
-    if (!await checkIConnection()) {
-      Fluttertoast.showToast(
-        msg: "لا يوجد اتصال بالإنترنت",
-        gravity: ToastGravity.BOTTOM,
-      );
-      return [];
-    }
-
-    final prompt = """
+  // ================= Generate New Quiz (Online Only) =================
+  Future<List<Question>> generateQuizByCategory(
+    Category category,
+    String level,
+  ) async {
+    final seed = DateTime.now().microsecondsSinceEpoch;
+    final prompt =
+    """
 You are an expert exam designer and senior subject-matter specialist.
 
 Your task is to generate EXACTLY 10 high-quality multiple-choice questions strictly according to the provided difficulty level.
+
+Randomization Seed:
+$seed
+Use this seed to intentionally maximize variation and avoid similarity with any previous questions.
 
 Category:
 ${category.title}
@@ -43,7 +44,14 @@ Rules and constraints:
 - Each question must have EXACTLY 4 distinct answer options.
 - Only ONE option is correct.
 - Incorrect options must be realistic, logical, and clearly incorrect.
-- Do NOT include explanations, hints, markdown, comments, or extra text.
+
+ANTI-REPETITION RULES (MANDATORY):
+- Each generated question MUST be conceptually and structurally DIFFERENT from typical or common questions in this topic.
+- Do NOT rephrase common or previously generated questions.
+- Avoid standard definitions or textbook-style questions unless absolutely required by the difficulty.
+- Prefer uncommon scenarios, edge cases, indirect reasoning, comparisons, or practical use cases.
+- Each question must focus on a DIFFERENT subtopic or analytical angle within the provided scope.
+- Assume the user has already taken similar tests before and expects NEW questions every time.
 
 Output format rules (CRITICAL):
 - Return ONLY valid JSON.
@@ -61,7 +69,6 @@ Output format rules (CRITICAL):
 Any output that is not valid JSON or does not follow the exact structure is considered incorrect.
 """;
 
-
     try {
       final res = await http.post(
         Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
@@ -74,45 +81,87 @@ Any output that is not valid JSON or does not follow the exact structure is cons
           "messages": [
             {"role": "user", "content": prompt},
           ],
-          "temperature": 0.1,
+          "temperature": 0.9,
+          "top_p": 0.9,
         }),
       );
 
-      if (res.statusCode != 200) {
-        Fluttertoast.showToast(
-          msg: "خطأ في السيرفر، حاول لاحقًا",
-        );
-        return [];
-      }
+      if (res.statusCode != 200) return [];
 
       final body = jsonDecode(utf8.decode(res.bodyBytes));
       String content = body['choices'][0]['message']['content'];
       content = _extractJson(content);
 
       final List data = jsonDecode(content);
+      final List<Question> questions = [];
 
-      return data.map<Question>((q) {
-        return Question(
-          text: q['question'],
-          options: List.generate(4, (i) {
+      for (final q in data) {
+        try {
+          int correctIndex = q['correctIndex'] ?? 0;
+          final List optionsRaw = q['options'];
+
+          final options = List.generate(4, (i) {
             return Option(
-              text: q['options'][i],
-              isCorrect: i == q['correctIndex'],
+              text: optionsRaw[i].toString(),
+              isCorrect: i == correctIndex,
+              index: i,
             );
-          }),
-        );
-      }).toList();
-    } on SocketException {
-      Fluttertoast.showToast(
-        msg: "تحقق من اتصال الإنترنت",
-      );
-      return [];
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "حدث خطأ غير متوقع",
-      );
+          });
+
+          questions.add(Question(text: q['question'].toString(), options: options));
+        } catch (_) { continue; }
+      }
+      return questions;
+    } catch (_) {
       return [];
     }
+  }
+
+  // ================= Offline / Online Logic =================
+  Future<List<Question>> loadQuizQuestions(
+    Category category,
+    String level,
+  ) async {
+    try {
+      // تمرير اللغة للكاش لتمييز الاختبارات
+      final cachedQuiz = await QuizCacheService.loadQuiz(
+        categoryId: category.id,
+        level: level,
+        language: category.language, // تم إضافة اللغة هنا
+      );
+
+      // 1. إذا لا يوجد إنترنت
+      if (!await ConnectivityService.hasInternet()) {
+        if (cachedQuiz != null && cachedQuiz.isNotEmpty) {
+          return cachedQuiz.map((e) => Question.fromJson(e)).toList();
+        }
+        return [];
+      }
+
+      // 2. يوجد إنترنت → حاول التوليد
+      final questions = await generateQuizByCategory(category, level);
+
+      if (questions.isNotEmpty) {
+        // حفظ في الكاش مع تحديد اللغة
+        await QuizCacheService.saveQuiz(
+          categoryId: category.id,
+          level: level,
+          language: category.language, // تم إضافة اللغة هنا
+          quiz: questions.map((q) => q.toJson()).toList(),
+        );
+        Fluttertoast.showToast(msg: "تم إنشاء إسئله جديدة");
+        return questions;
+      }
+
+      // 3. فشل التوليد → ارجع للكاش
+      if (cachedQuiz != null && cachedQuiz.isNotEmpty) {
+        Fluttertoast.showToast(msg: "تم استخدام اسئلة محفوظة سابقاً");
+        return cachedQuiz.map((e) => Question.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print("Error loading questions: $e");
+    }
+    return [];
   }
 
   String _extractJson(String text) {

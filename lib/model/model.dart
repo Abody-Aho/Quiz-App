@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// ================= Question Model =================
 class Question {
   final String text;
   final List<Option> options;
@@ -12,25 +13,69 @@ class Question {
     this.selectedOption,
     this.isConfirmed = false,
   });
+
+  // ================= JSON =================
+  factory Question.fromJson(Map<String, dynamic> json) {
+    return Question(
+      text: json['text'],
+      options: (json['options'] as List)
+          .map((o) => Option.fromJson(o))
+          .toList(),
+      selectedOption: null,
+      isConfirmed: false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'options': options.map((o) => o.toJson()).toList(),
+    };
+  }
 }
 
+// ================= Option Model =================
 class Option {
   final String text;
   final bool isCorrect;
+  final int index;
 
-  Option({required this.text, required this.isCorrect});
+  Option({
+    required this.text,
+    required this.isCorrect,
+    required this.index,
+  });
+
+  // ================= JSON =================
+  factory Option.fromJson(Map<String, dynamic> json) {
+    return Option(
+      text: json['text'],
+      isCorrect: json['isCorrect'],
+      index: json['index'] ?? 0, // أضفنا قيمة افتراضية لتجنب الانهيار
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'isCorrect': isCorrect,
+      'index': index, // أضفنا الـ index هنا لكي يُحفظ في الكاش
+    };
+  }
 }
 
+// ================= Category Model =================
 class Category {
   final String id;
+  final String language;
   final String title;
   final String prompt;
-   late String level;
   final String image;
   final TextDirection direction;
 
   Category({
     required this.id,
+    required this.language,
     required this.title,
     required this.prompt,
     required this.image,
@@ -40,6 +85,7 @@ class Category {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'language': language,
       'title': title,
       'prompt': prompt,
       'image': image,
@@ -50,6 +96,7 @@ class Category {
   factory Category.fromMap(Map<String, dynamic> map) {
     return Category(
       id: map['id'],
+      language: map['language'],
       title: map['title'],
       prompt: map['prompt'],
       image: map['image'],

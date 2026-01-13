@@ -1,8 +1,10 @@
 import 'package:confetti/confetti.dart'
     show ConfettiController, ConfettiWidget, BlastDirectionality;
 import 'package:flutter/material.dart';
+import '../service/quiz_progress_service.dart';
 import '../service/statistics_service.dart';
 
+// ================= Result Page =================
 class ResultPage extends StatefulWidget {
   final int score;
   final int total;
@@ -14,22 +16,30 @@ class ResultPage extends StatefulWidget {
 }
 
 class _ResultPageState extends State<ResultPage> {
+
+  // ================= Controllers =================
   late ConfettiController _confettiController;
 
   @override
+  @override
   void initState() {
     super.initState();
+
+    // ================= Save Final Statistics =================
     final statisticsService = StatisticsService();
     statisticsService.saveResult(
       correct: widget.score,
       wrong: widget.total - widget.score,
     );
+    QuizProgressService.clearProgress();
 
+    // ================= Confetti =================
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
     _confettiController.play();
   }
+
 
   @override
   void dispose() {
@@ -37,6 +47,7 @@ class _ResultPageState extends State<ResultPage> {
     super.dispose();
   }
 
+  // ================= Score Result =================
   String getScoreResult() {
     if (widget.score == widget.total) return "Perfect 🎉";
     if (widget.score >= widget.total * 0.7) return "Good 👏";
@@ -44,6 +55,7 @@ class _ResultPageState extends State<ResultPage> {
     return "Bad 😢";
   }
 
+  // ================= Score Color =================
   Color getScoreColor() {
     if (widget.score == widget.total) return Colors.greenAccent;
     if (widget.score >= widget.total * 0.7) return Colors.orangeAccent;
@@ -51,12 +63,15 @@ class _ResultPageState extends State<ResultPage> {
     return Colors.redAccent;
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
+
+          // ================= Background & Card =================
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -130,6 +145,8 @@ class _ResultPageState extends State<ResultPage> {
               ),
             ),
           ),
+
+          // ================= Confetti Effect =================
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(

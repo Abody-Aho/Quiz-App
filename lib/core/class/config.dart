@@ -1,18 +1,23 @@
 import 'dart:io';
+
+// ================= Internet Connection Check =================
+// التحقق من توفر اتصال بالإنترنت عبر اختبار الوصول إلى خادم خارجي
 Future<bool> checkIConnection() async {
-  try{
+  try {
     final result = await InternetAddress.lookup('google.com');
-    if(result.isNotEmpty && result[0].rawAddress.isNotEmpty){
+
+    // التحقق من نجاح الاتصال واستلام عنوان IP صالح
+    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
       print('connected');
       return true;
-    }
-    else{
+    } else {
       print('not connected');
       return false;
     }
-  } on SocketException catch(_){
+  }
+  // معالجة فشل الاتصال أو عدم توفر الشبكة
+  on SocketException catch (_) {
     print('not connected');
     return false;
   }
-
-  }
+}

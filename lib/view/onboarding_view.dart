@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../core/class/route_transitions.dart';
 import '../model/model.dart';
 import 'login_page.dart';
 
+// ================= Onboarding View =================
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
 
@@ -10,9 +12,12 @@ class OnboardingView extends StatefulWidget {
 }
 
 class _OnboardingViewState extends State<OnboardingView> {
+
+  // ================= Controllers & State =================
   final PageController _controller = PageController();
   int currentIndex = 0;
 
+  // ================= Onboarding Data =================
   final List<OnboardItem> items = [
     OnboardItem(
       icon: Icons.smart_toy_outlined,
@@ -40,6 +45,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     ),
   ];
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,6 +60,8 @@ class _OnboardingViewState extends State<OnboardingView> {
         child: SafeArea(
           child: Column(
             children: [
+
+              // ================= Pages =================
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
@@ -100,7 +108,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                 ),
               ),
 
-              // Indicators
+              // ================= Page Indicators =================
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -122,7 +130,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
               const SizedBox(height: 20),
 
-              // Button
+              // ================= Action Button =================
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: SizedBox(
@@ -145,7 +153,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                       } else {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) =>  LoginPage()),
+                          AppRoute.fadeSlide(
+                            const LoginPage(),
+                          ),
                         );
                       }
                     },

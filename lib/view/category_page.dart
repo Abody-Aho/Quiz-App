@@ -8,12 +8,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
 import '../core/class/dialogs.dart';
 import '../core/class/route_transitions.dart';
 import '../model/model.dart';
 import '../widget/categories.dart';
 import 'question_view.dart';
 
+// ================= Category Page =================
 class CategoryPage extends StatefulWidget {
   final String language;
   final TextDirection direction;
@@ -29,31 +31,31 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  // Controllers لحقول الإدخال
+
+  // ================= Controllers & Keys =================
   TextEditingController titleController = TextEditingController();
   TextEditingController promptController = TextEditingController();
 
-  // مفاتيح تستخدم في tutorial coach mark
   final GlobalKey _firstCategoryKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
 
   XFile? selectedImage;
   final _formKey = GlobalKey<FormState>();
 
-  // قائمة الفئات بعد التصفية حسب اللغة
+  // ================= State =================
   List<Category> filteredCategories = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData(); // تحميل البيانات المحفوظة
+    _loadData();
   }
 
+  // ================= Local Data Loading =================
   Future<void> _loadData() async {
     final savedCategories = await loadCategories();
 
-    // استرجاع الفئات من التخزين المحلي
     if (savedCategories.isNotEmpty) {
       setState(() {
         categories
@@ -64,7 +66,6 @@ class _CategoryPageState extends State<CategoryPage> {
 
     _updateFilteredCategories();
 
-    // عرض الإرشادات لأول مرة فقط
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (filteredCategories.isNotEmpty) {
         _checkAndShowTutorial();
@@ -72,9 +73,9 @@ class _CategoryPageState extends State<CategoryPage> {
     });
   }
 
+  // ================= Tutorial Check =================
   Future<void> _checkAndShowTutorial() async {
     final prefs = await SharedPreferences.getInstance();
-
     final bool isTutorialShown =
         prefs.getBool('tutorial_shown_${widget.language}') ?? false;
 
@@ -84,16 +85,14 @@ class _CategoryPageState extends State<CategoryPage> {
     }
   }
 
-  // حفظ الفئات محليًا
+  // ================= Local Storage =================
   Future<void> saveCategories(List<Category> categories) async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> jsonList = categories
-        .map((c) => jsonEncode(c.toMap()))
-        .toList();
+    List<String> jsonList =
+    categories.map((c) => jsonEncode(c.toMap())).toList();
     await prefs.setStringList('categories', jsonList);
   }
 
-  // تحميل الفئات من التخزين المحلي
   Future<List<Category>> loadCategories() async {
     final prefs = await SharedPreferences.getInstance();
     final List<String>? jsonList = prefs.getStringList('categories');
@@ -101,7 +100,7 @@ class _CategoryPageState extends State<CategoryPage> {
     return jsonList.map((j) => Category.fromMap(jsonDecode(j))).toList();
   }
 
-  // حفظ الصورة في مسار دائم
+  // ================= Image Handling =================
   Future<String> saveImagePermanently(File image) async {
     final dir = await getApplicationDocumentsDirectory();
     final fileName = p.basename(image.path);
@@ -109,18 +108,18 @@ class _CategoryPageState extends State<CategoryPage> {
     return savedImage.path;
   }
 
-  // فلترة الفئات حسب اللغة
+  // ================= Filtering =================
   void _updateFilteredCategories() {
     setState(() {
-      filteredCategories = categories
-          .where((c) => c.id == widget.language)
-          .toList();
+      filteredCategories =
+          categories.where((c) => c.language == widget.language).toList();
     });
   }
 
   static const Color backgroundPurple = Color(0xFF1E1A40);
   static const Color primaryPurple = Color(0xFF6C63FF);
 
+  // ================= Refresh =================
   Future<void> _refreshPage() async {
     setState(() => isLoading = true);
     await Future.delayed(const Duration(seconds: 2));
@@ -128,6 +127,7 @@ class _CategoryPageState extends State<CategoryPage> {
     setState(() => isLoading = false);
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,7 +164,6 @@ class _CategoryPageState extends State<CategoryPage> {
             itemBuilder: (context, index) {
               final category = filteredCategories[index];
               return GestureDetector(
-                // ضغط مطول للتعديل أو الحذف
                 onLongPress: () => _showEditCategoryDialog(
                   category,
                   categories.indexOf(category),
@@ -216,6 +215,7 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
+  // ================= Difficulty Dialog =================
   void _showDifficultyDialog(BuildContext context, Category category) {
     const Color primaryPurple = Color(0xFF6C63FF);
     const Color lightPurple = Color(0xFFF3F2FF);
@@ -230,7 +230,6 @@ class _CategoryPageState extends State<CategoryPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // العنوان
               Text(
                 widget.language == 'en'
                     ? "Choose Difficulty"
@@ -241,10 +240,8 @@ class _CategoryPageState extends State<CategoryPage> {
                   color: Colors.white,
                 ),
               ),
-
               const SizedBox(height: 20),
 
-              // ===== سهل =====
               _difficultyButton(
                 title: widget.language == 'en' ? "Easy" : "سهل",
                 color: primaryPurple,
@@ -258,14 +255,13 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: widget.language,
                         level:
-                            "Easy: basic and introductory questions suitable for beginners.",
+                        "Easy: basic and introductory questions suitable for beginners.",
                       ),
                     ),
                   );
                 },
               ),
 
-              // ===== متوسط =====
               _difficultyButton(
                 title: widget.language == 'en' ? "Medium" : "متوسط",
                 color: primaryPurple,
@@ -279,16 +275,15 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: widget.language,
                         level:
-                            "Medium: moderately challenging questions that require solid understanding.",
+                        "Medium: moderately challenging questions that require solid understanding.",
                       ),
                     ),
                   );
                 },
               ),
 
-              // ===== صعب =====
               _difficultyButton(
-                title: widget.language == 'en' ? "Hard" :"صعب",
+                title: widget.language == 'en' ? "Hard" : "صعب",
                 color: Colors.white,
                 background: primaryPurple,
                 onTap: () {
@@ -300,16 +295,15 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: widget.language,
                         level:
-                            "Hard: advanced questions that test deep knowledge and analytical thinking.",
+                        "Hard: advanced questions that test deep knowledge and analytical thinking.",
                       ),
                     ),
                   );
                 },
               ),
 
-              // ===== صعب جداً =====
               _difficultyButton(
-                title: widget.language == 'en' ? "Very Hard" :"صعب جداً",
+                title: widget.language == 'en' ? "Very Hard" : "صعب جداً",
                 color: Colors.white,
                 background: const Color(0xFF4A43D1),
                 onTap: () {
@@ -321,7 +315,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: widget.language,
                         level:
-                            "Very Hard: expert-level, complex, and highly analytical questions.",
+                        "Very Hard: expert-level, complex, and highly analytical questions.",
                       ),
                     ),
                   );
@@ -334,6 +328,7 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
+  // ================= Widgets =================
   Widget _difficultyButton({
     required String title,
     required Color color,
@@ -364,7 +359,7 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
-  // التعامل مع الصور (asset أو file)
+  // ================= Category Image =================
   Widget _buildCategoryImage(String imagePath) {
     if (imagePath.isEmpty) {
       return Container(
@@ -381,15 +376,12 @@ class _CategoryPageState extends State<CategoryPage> {
       borderRadius: BorderRadius.circular(16),
       child: imagePath.startsWith('asset')
           ? Image.asset(imagePath, height: 70, width: 70, fit: BoxFit.cover)
-          : Image.file(
-              File(imagePath),
-              height: 70,
-              width: 70,
-              fit: BoxFit.cover,
-            ),
+          : Image.file(File(imagePath),
+          height: 70, width: 70, fit: BoxFit.cover),
     );
   }
 
+  // ================= Form Helpers =================
   void _clearCategoryForm() {
     titleController.clear();
     promptController.clear();
@@ -402,6 +394,8 @@ class _CategoryPageState extends State<CategoryPage> {
     }
     return null;
   }
+
+  // ================= Add / Edit / Delete =================
 
   void _showAddCategoryDialog() {
     showScaleDialog(
@@ -455,17 +449,17 @@ class _CategoryPageState extends State<CategoryPage> {
                     if (selectedImage != null)
                       selectedImage!.path.startsWith('asset')
                           ? Image.asset(
-                              selectedImage!.path,
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            )
+                        selectedImage!.path,
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      )
                           : Image.file(
-                              File(selectedImage!.path),
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            ),
+                        File(selectedImage!.path),
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      ),
                     TextButton.icon(
                       icon: const Icon(Icons.image, color: Colors.white70),
                       label: Text(
@@ -503,7 +497,8 @@ class _CategoryPageState extends State<CategoryPage> {
                   if (_formKey.currentState!.validate()) {
                     categories.add(
                       Category(
-                        id: widget.language,
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        language: widget.language,
                         title: titleController.text,
                         prompt: promptController.text,
                         image: selectedImage?.path ?? '',
@@ -581,17 +576,17 @@ class _CategoryPageState extends State<CategoryPage> {
                     if (selectedImage != null)
                       selectedImage!.path.startsWith('asset')
                           ? Image.asset(
-                              selectedImage!.path,
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            )
+                        selectedImage!.path,
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      )
                           : Image.file(
-                              File(selectedImage!.path),
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            ),
+                        File(selectedImage!.path),
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
+                      ),
                     TextButton.icon(
                       icon: const Icon(Icons.image, color: Colors.white70),
                       label: Text(
@@ -649,6 +644,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   if (_formKey.currentState!.validate()) {
                     categories[index] = Category(
                       id: category.id,
+                      language: category.language,
                       title: titleController.text,
                       prompt: promptController.text,
                       image: selectedImage?.path ?? '',
@@ -795,3 +791,4 @@ class _CategoryPageState extends State<CategoryPage> {
     });
   }
 }
+

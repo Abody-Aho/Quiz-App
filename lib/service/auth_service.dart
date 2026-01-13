@@ -8,7 +8,7 @@ class AuthService {
     scopes: ['email'],
   );
 
-  // هل المستخدم ضيف؟
+  // هل المستخدم ضيف
   bool get isGuest => _auth.currentUser == null;
 
   // تسجيل الدخول باستخدام Google
