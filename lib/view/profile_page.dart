@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/view/report_page.dart';
 import 'package:exam/view/review_questions_page.dart';
 import 'package:exam/view/statistics_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +10,10 @@ import 'package:skeletonizer/skeletonizer.dart' show Skeletonizer;
 
 import '../core/class/route_transitions.dart';
 import '../service/auth_service.dart';
+import '../service/global_cognitive_analyzer.dart';
+import '../service/report_history_service.dart';
+import '../service/report_service.dart';
+import 'global_report_page.dart';
 
 // ================= Profile Page =================
 class ProfilePage extends StatefulWidget {
@@ -233,6 +238,65 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 25),
 
+                _reportButton(
+                  icon: Icons.psychology,
+                  title: "آخر تقرير معرفي",
+                  onPressed: () {
+                    if (ReportService.hasReport()) {
+                      final report = ReportService.getLastReport()!;
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReportPage(report: report),
+                        ),
+                      );
+                    } else {
+                      Fluttertoast.showToast(
+                        msg: "لا يوجد تقرير متاح، حل اختبار أولاً",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.black87,
+                        textColor: Colors.white,
+                        fontSize: 16,
+                      );
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 25),
+
+                _reportButton(
+                  icon: Icons.auto_graph,
+                  title: "التقرير المعرفي الشامل",
+                  onPressed: () {
+                    if (ReportHistoryService.hasReports()) {
+                      final reports = ReportHistoryService.getAllReports();
+                      final globalReport =
+                      GlobalCognitiveAnalyzer.analyzeAll(reports);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => GlobalReportPage(report: globalReport),
+                        ),
+                      );
+                    } else {
+                      Fluttertoast.showToast(
+                        msg: "لا يوجد تقارير بعد، حل بعض الاختبارات أولاً",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.black87,
+                        textColor: Colors.white,
+                        fontSize: 16,
+                      );
+                    }
+                  },
+                ),
+
+
+                const SizedBox(height: 25),
+
                 // ================= Actions =================
                 if (isGuest)
                   _buildGoogleButton(
@@ -300,6 +364,53 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  Widget _reportButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String title,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 6,
+        ),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6A1B9A), Color(0xffC33764)],
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildGoogleButton(
       {required String text, required VoidCallback onTap}) {

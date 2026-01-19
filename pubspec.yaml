@@ -50,6 +50,7 @@ dependencies:
   firebase_auth: ^5.7.0
   cloud_firestore: ^5.4.0
   google_sign_in: ^5.4.4
+  fl_chart: ^1.1.1
 
 
 dev_dependencies:

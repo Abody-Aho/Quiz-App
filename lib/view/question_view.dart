@@ -7,6 +7,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../core/class/route_transitions.dart';
 import '../model/model.dart';
+import '../service/behavior_logger.dart';
 import '../service/groq_ai_service.dart';
 import '../service/quiz_progress_service.dart';
 import '../service/statistics_service.dart';
@@ -32,6 +33,7 @@ class _QuestionViewState extends State<QuestionView> {
   final GroqAIService aiService = GroqAIService();
   final PageController _controller = PageController();
 
+
   List<Question> questions = [];
   bool isLoading = true;
 
@@ -42,12 +44,14 @@ class _QuestionViewState extends State<QuestionView> {
   Future<void> _restoreProgress() async {
     final prefs = await SharedPreferences.getInstance();
     _score = prefs.getInt('quiz_score') ?? 0;
-    _questionNumber = prefs.getInt('quiz_question') ?? 1;
+    _questionNumber = 1;
   }
+
 
   @override
   void initState() {
     super.initState();
+    BehaviorLogger.startSession();
     _initQuiz();
   }
 
@@ -55,6 +59,7 @@ class _QuestionViewState extends State<QuestionView> {
     await _restoreProgress();
     await loadQuestions();
   }
+
 
   // ================= Load Questions =================
   Future<void> loadQuestions() async {
@@ -362,6 +367,12 @@ class _QuestionViewState extends State<QuestionView> {
                               question.isConfirmed =
                               true;
                               if (isCorrect) _score++;
+                              BehaviorLogger.logAnswer(
+                                questionIndex: _questionNumber,
+                                isCorrect: isCorrect,
+                                category: widget.category.title,
+                              );
+
                             });
 
                             await saveAnsweredQuestion(

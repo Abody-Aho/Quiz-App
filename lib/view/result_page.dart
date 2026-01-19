@@ -1,8 +1,16 @@
 import 'package:confetti/confetti.dart'
     show ConfettiController, ConfettiWidget, BlastDirectionality;
+import 'package:exam/view/report_page.dart';
 import 'package:flutter/material.dart';
+import '../service/cognitive_analyzer.dart';
+import '../model/cognitive_report.dart';
+import '../service/behavior_logger.dart';
 import '../service/quiz_progress_service.dart';
+import '../service/report_history_service.dart';
+import '../service/report_service.dart';
 import '../service/statistics_service.dart';
+
+
 
 // ================= Result Page =================
 class ResultPage extends StatefulWidget {
@@ -19,8 +27,8 @@ class _ResultPageState extends State<ResultPage> {
 
   // ================= Controllers =================
   late ConfettiController _confettiController;
+  late CognitiveReport cognitiveReport;
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -33,12 +41,24 @@ class _ResultPageState extends State<ResultPage> {
     );
     QuizProgressService.clearProgress();
 
+    // ================= Cognitive Analysis =================
+    final logs = BehaviorLogger.getSessionLogs();
+
+    if (logs.isNotEmpty) {
+      cognitiveReport = CognitiveAnalyzer.analyze(logs);
+    } else {
+      cognitiveReport = CognitiveAnalyzer.analyze([]);
+    }
+    ReportService.saveReport(cognitiveReport);
+    ReportHistoryService.addReport(cognitiveReport); // حفظ في السجل التراكمي
+
     // ================= Confetti =================
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
     _confettiController.play();
   }
+
 
 
   @override
@@ -114,6 +134,38 @@ class _ResultPageState extends State<ResultPage> {
                           color: getScoreColor(),
                         ),
                       ),
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.psychology),
+                          label: const Text(
+                            "عرض التقرير المعرفي",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueGrey.shade800,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReportPage(report: cognitiveReport),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
                       const SizedBox(height: 30),
                       SizedBox(
                         width: double.infinity,
