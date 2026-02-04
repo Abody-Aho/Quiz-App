@@ -6,13 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:skeletonizer/skeletonizer.dart' show Skeletonizer;
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../core/class/route_transitions.dart';
 import '../service/auth_service.dart';
 import '../service/global_cognitive_analyzer.dart';
 import '../service/report_history_service.dart';
-import '../service/report_service.dart';
 import 'global_report_page.dart';
 
 // ================= Profile Page =================
@@ -44,11 +43,10 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
   }
 
-  // 🔥 تحديث البيانات عند الرجوع للصفحة
+  // تحديث البيانات عند الرجوع للصفحة
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadUserData();
   }
 
   // ================= Save Google User =================
@@ -64,10 +62,12 @@ class _ProfilePageState extends State<ProfilePage> {
     await doc.set({
       'displayName': user.displayName,
       'photoURL': user.photoURL,
-      'correctAnswers':
-      snapshot.exists ? snapshot['correctAnswers'] ?? 0 : localCorrect,
-      'wrongAnswers':
-      snapshot.exists ? snapshot['wrongAnswers'] ?? 0 : localWrong,
+      'correctAnswers': snapshot.exists
+          ? snapshot['correctAnswers'] ?? 0
+          : localCorrect,
+      'wrongAnswers': snapshot.exists
+          ? snapshot['wrongAnswers'] ?? 0
+          : localWrong,
     }, SetOptions(merge: true));
   }
 
@@ -138,11 +138,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 CircleAvatar(
                   radius: 55,
                   backgroundColor: Colors.white,
-                  backgroundImage:
-                  imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                  backgroundImage: imageUrl.isNotEmpty
+                      ? NetworkImage(imageUrl)
+                      : null,
                   child: imageUrl.isEmpty
-                      ? const Icon(Icons.person,
-                      size: 55, color: Colors.purple)
+                      ? const Icon(Icons.person, size: 55, color: Colors.purple)
                       : null,
                 ),
 
@@ -175,12 +175,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   Container(
                     margin: const EdgeInsets.only(top: 14, bottom: 10),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3)),
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: const Text(
                       "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
@@ -195,15 +198,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 InkWell(
                   onTap: isGuest
                       ? () => Fluttertoast.showToast(
-                    msg: "يجب تسجيل الدخول لمراجعة الإجابات",
-                  )
+                          msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                        )
                       : () => Navigator.push(
-                    context,
-                    AppRoute.fadeSlide(
-                        ReviewQuestionsPage(showCorrect: true)),
-                  ),
+                          context,
+                          AppRoute.fadeSlide(
+                            ReviewQuestionsPage(showCorrect: true),
+                          ),
+                        ),
                   child: _buildStatCard(
-                    title: "Correct Answers",
+                    title: "أجابات صحيحة",
                     value: correct,
                     icon: Icons.check_circle,
                     color: Colors.greenAccent,
@@ -212,15 +216,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 InkWell(
                   onTap: isGuest
                       ? () => Fluttertoast.showToast(
-                    msg: "يجب تسجيل الدخول لمراجعة الإجابات",
-                  )
+                          msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                        )
                       : () => Navigator.push(
-                    context,
-                    AppRoute.fadeSlide(
-                        ReviewQuestionsPage(showCorrect: false)),
-                  ),
+                          context,
+                          AppRoute.fadeSlide(
+                            ReviewQuestionsPage(showCorrect: false),
+                          ),
+                        ),
                   child: _buildStatCard(
-                    title: "Wrong Answers",
+                    title: "أجابات خاطئة",
                     value: wrong,
                     icon: Icons.cancel,
                     color: Colors.redAccent,
@@ -241,27 +246,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 _reportButton(
                   icon: Icons.psychology,
                   title: "آخر تقرير معرفي",
-                  onPressed: () {
-                    if (ReportService.hasReport()) {
-                      final report = ReportService.getLastReport()!;
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ReportPage(report: report),
+                  onPressed: () => isGuest
+                      ? Fluttertoast.showToast(
+                          msg: "يجب تسجيل الدخول لتظهر القارير",
+                        )
+                      : Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => LastAnalysisPage()),
                         ),
-                      );
-                    } else {
-                      Fluttertoast.showToast(
-                        msg: "لا يوجد تقرير متاح، حل اختبار أولاً",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.black87,
-                        textColor: Colors.white,
-                        fontSize: 16,
-                      );
-                    }
-                  },
                 ),
 
                 const SizedBox(height: 25),
@@ -270,30 +262,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   icon: Icons.auto_graph,
                   title: "التقرير المعرفي الشامل",
                   onPressed: () {
-                    if (ReportHistoryService.hasReports()) {
+                    if(isGuest){
+                      Fluttertoast.showToast(
+                        msg: "يجب تسجيل الدخول لتظهر القارير",
+                      );
+                    }else{
                       final reports = ReportHistoryService.getAllReports();
-                      final globalReport =
-                      GlobalCognitiveAnalyzer.analyzeAll(reports);
-
+                      final _ = GlobalCognitiveAnalyzer.analyzeAll(
+                        reports,
+                      );
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => GlobalReportPage(report: globalReport),
-                        ),
-                      );
-                    } else {
-                      Fluttertoast.showToast(
-                        msg: "لا يوجد تقارير بعد، حل بعض الاختبارات أولاً",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.black87,
-                        textColor: Colors.white,
-                        fontSize: 16,
+                        MaterialPageRoute(builder: (_) => GlobalReportPage()),
                       );
                     }
+
                   },
                 ),
-
 
                 const SizedBox(height: 25),
 
@@ -333,8 +318,9 @@ class _ProfilePageState extends State<ProfilePage> {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           elevation: 6,
         ),
         child: Ink(
@@ -353,9 +339,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   'لوحة المتصدرين',
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -411,9 +398,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
-  Widget _buildGoogleButton(
-      {required String text, required VoidCallback onTap}) {
+  Widget _buildGoogleButton({
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -429,9 +417,10 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Image.asset("asset/images/google2.png", height: 22),
             const SizedBox(width: 12),
-            Text(text,
-                style:
-                const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),
@@ -454,9 +443,13 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Icon(Icons.logout, color: Colors.white),
             SizedBox(width: 10),
-            Text("تسجيل الخروج",
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(
+              "تسجيل الخروج",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -478,39 +471,46 @@ class _ProfilePageState extends State<ProfilePage> {
           backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(icon, color: color),
         ),
-        title: Text(title,
-            style:
-            const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
         trailing: Text(
           value.toString(),
           style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.bold, color: color),
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
       ),
     );
   }
 
   // ================= Logout Dialog =================
-  Future<void> showDeleteConfirmDialog(
-      {required BuildContext context}) async {
+  Future<void> showDeleteConfirmDialog({required BuildContext context}) async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2E2A50),
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('تسجيل خروج',
-              style:
-              TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          content: const Text('هل أنت متأكد من تسجيل الخروج؟',
-              style: TextStyle(color: Colors.white70)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'تسجيل خروج',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'هل أنت متأكد من تسجيل الخروج؟',
+            style: TextStyle(color: Colors.white70),
+          ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context),
-                child:
-                const Text('إلغاء', style: TextStyle(color: Colors.grey))),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+            ),
             ElevatedButton(
               onPressed: () async {
                 await authService.signOut();
@@ -520,10 +520,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (!mounted) return;
                 Navigator.pop(context);
               },
-              style:
-              ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-              child:
-              const Text('نعم', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              child: const Text('نعم', style: TextStyle(color: Colors.white)),
             ),
           ],
         );

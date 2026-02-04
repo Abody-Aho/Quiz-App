@@ -1,7 +1,11 @@
 import 'package:confetti/confetti.dart'
     show ConfettiController, ConfettiWidget, BlastDirectionality;
 import 'package:exam/view/report_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import '../service/cloud_last_analysis_service.dart';
+import '../service/cloud_report_service.dart';
 import '../service/cognitive_analyzer.dart';
 import '../model/cognitive_report.dart';
 import '../service/behavior_logger.dart';
@@ -28,36 +32,49 @@ class _ResultPageState extends State<ResultPage> {
   // ================= Controllers =================
   late ConfettiController _confettiController;
   late CognitiveReport cognitiveReport;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _saved = false;
+
 
   @override
   void initState() {
     super.initState();
-
-    // ================= Save Final Statistics =================
-    final statisticsService = StatisticsService();
-    statisticsService.saveResult(
-      correct: widget.score,
-      wrong: widget.total - widget.score,
-    );
-    QuizProgressService.clearProgress();
-
-    // ================= Cognitive Analysis =================
-    final logs = BehaviorLogger.getSessionLogs();
-
-    if (logs.isNotEmpty) {
-      cognitiveReport = CognitiveAnalyzer.analyze(logs);
-    } else {
-      cognitiveReport = CognitiveAnalyzer.analyze([]);
-    }
-    ReportService.saveReport(cognitiveReport);
-    ReportHistoryService.addReport(cognitiveReport); // حفظ في السجل التراكمي
-
+    _initResult();
     // ================= Confetti =================
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
     _confettiController.play();
   }
+
+  Future<void> _initResult() async {
+    if (_saved) return;
+    _saved = true;
+
+    // ================= Save Final Statistics =================
+    final statisticsService = StatisticsService();
+    await statisticsService.saveResult(
+      correct: widget.score,
+      wrong: widget.total - widget.score,
+    );
+
+    await QuizProgressService.clearProgress();
+
+    // ================= Cognitive Analysis =================
+    final logs = BehaviorLogger.getSessionLogs();
+    cognitiveReport = CognitiveAnalyzer.analyze(
+      logs.isNotEmpty ? logs : [],
+    );
+
+    await CloudLastAnalysisService.saveLastAnalysis(cognitiveReport);
+
+    // ================= Save Reports =================
+    ReportService.saveReport(cognitiveReport);
+    ReportHistoryService.addReport(cognitiveReport);
+    await CloudReportService.saveReport(cognitiveReport);
+  }
+
+
 
 
 
@@ -86,6 +103,7 @@ class _ResultPageState extends State<ResultPage> {
   // ================= UI =================
   @override
   Widget build(BuildContext context) {
+    final bool isGuest = _auth.currentUser == null;
     return Scaffold(
       body: Stack(
         alignment: Alignment.topCenter,
@@ -155,14 +173,17 @@ class _ResultPageState extends State<ResultPage> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: ()=> isGuest
+                              ? Fluttertoast.showToast(
+                            msg: "يجب تسجيل الدخول لتظهر القارير",
+                          ) :
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ReportPage(report: cognitiveReport),
+                                builder: (_) => LastAnalysisPage(),
                               ),
-                            );
-                          },
+                            ),
+
                         ),
                       ),
 

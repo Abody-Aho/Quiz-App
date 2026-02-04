@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import '../model/cognitive_report.dart';
+import '../service/cloud_last_analysis_service.dart';
 
-class ReportPage extends StatelessWidget {
-  final CognitiveReport report;
+class LastAnalysisPage extends StatefulWidget {
+  const LastAnalysisPage({super.key});
 
-  const ReportPage({super.key, required this.report});
+  @override
+  State<LastAnalysisPage> createState() => _LastAnalysisPageState();
+}
+
+class _LastAnalysisPageState extends State<LastAnalysisPage> {
+  Future<CognitiveReport?>? _futureReport;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureReport = CloudLastAnalysisService.getLastAnalysis();
+  }
 
   Color _getWeaknessColor(double value) {
     if (value >= 70) return Colors.redAccent;
@@ -25,210 +38,244 @@ class ReportPage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
+          child: FutureBuilder<CognitiveReport?>(
+            future: _futureReport,
+            builder: (context, snapshot) {
+              // ================= Loading =================
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
+              }
 
-                // ================= Header =================
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // ================= No Data =================
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.psychology,
+                          size: 80, color: Colors.white70),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "لا يوجد تحليل محفوظ بعد\nقم بحل اختبار أولاً",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back,
+                            color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final report = snapshot.data!;
+
+              // ================= Main UI =================
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back,
-                          color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+
+                    // ================= Header =================
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "تحليل آخر اختبار",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "التقرير المعرفي",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+
+                    const SizedBox(height: 16),
+
+                    // ================= Content =================
+                    Expanded(
+                      child: ListView(
+                        children: [
+
+                          // ===== Overview =====
+                          _buildCard(
+                            title: "الملخص العام",
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildInfoRow("الإجابات الصحيحة",
+                                    "${report.totalCorrect}"),
+                                _buildInfoRow("الإجابات الخاطئة",
+                                    "${report.totalWrong}"),
+                                _buildInfoRow("نسبة الدقة",
+                                    "${report.accuracy.toStringAsFixed(1)}%"),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // ===== Accuracy Pie =====
+                          _buildCard(
+                            title: "مؤشر الدقة",
+                            child: SizedBox(
+                              height: 180,
+                              child: PieChart(
+                                PieChartData(
+                                  sectionsSpace: 4,
+                                  centerSpaceRadius: 50,
+                                  sections: [
+                                    PieChartSectionData(
+                                      value: report.accuracy,
+                                      color: Colors.greenAccent,
+                                      radius: 40,
+                                      title:
+                                      "${report.accuracy.toStringAsFixed(0)}%",
+                                      titleStyle: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    PieChartSectionData(
+                                      value: 100 - report.accuracy,
+                                      color: Colors.white24,
+                                      radius: 40,
+                                      title: "",
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // ===== Trend =====
+                          _buildCard(
+                            title: "اتجاه الأداء",
+                            child: Text(
+                              report.performanceTrend,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // ===== Line Chart =====
+                          if (report.answersFlow.isNotEmpty)
+                            _buildCard(
+                              title: "منحنى الأداء أثناء الاختبار",
+                              child: SizedBox(
+                                height: 200,
+                                child: LineChart(
+                                  LineChartData(
+                                    minY: 0,
+                                    maxY: 1,
+                                    gridData:
+                                    FlGridData(show: false),
+                                    titlesData:
+                                    FlTitlesData(show: false),
+                                    borderData:
+                                    FlBorderData(show: false),
+                                    lineBarsData: [
+                                      LineChartBarData(
+                                        spots: report.answersFlow
+                                            .asMap()
+                                            .entries
+                                            .map((e) => FlSpot(
+                                          e.key.toDouble() + 1,
+                                          e.value ? 1 : 0,
+                                        ))
+                                            .toList(),
+                                        isCurved: true,
+                                        color: Colors.cyanAccent,
+                                        barWidth: 4,
+                                        dotData:
+                                        FlDotData(show: true),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 16),
+
+                          // ===== Category Weakness =====
+                          _buildCard(
+                            title: "تحليل الضعف حسب الفئة",
+                            child: Column(
+                              children: report.categoryWeakness.entries
+                                  .map((e) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 6),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        e.key,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        "${e.value.toStringAsFixed(0)}% أخطاء",
+                                        style: TextStyle(
+                                          color: _getWeaknessColor(
+                                              e.value),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // ===== Summary =====
+                          _buildCard(
+                            title: "التحليل الذكي",
+                            child: Text(
+                              report.summary,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 16),
-
-                // ================= Content =================
-                Expanded(
-                  child: ListView(
-                    children: [
-
-                      // ===== Overview Card =====
-                      _buildCard(
-                        title: "الملخص العام",
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildInfoRow(
-                                "الإجابات الصحيحة", "${report.totalCorrect}"),
-                            _buildInfoRow(
-                                "الإجابات الخاطئة", "${report.totalWrong}"),
-                            _buildInfoRow(
-                                "نسبة الدقة",
-                                "${report.accuracy.toStringAsFixed(1)}%"),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ===== Accuracy Pie Chart =====
-                      _buildCard(
-                        title: "مؤشر الدقة",
-                        child: SizedBox(
-                          height: 180,
-                          child: PieChart(
-                            PieChartData(
-                              sectionsSpace: 4,
-                              centerSpaceRadius: 50,
-                              sections: [
-                                PieChartSectionData(
-                                  value: report.accuracy,
-                                  color: Colors.greenAccent,
-                                  radius: 40,
-                                  title:
-                                  "${report.accuracy.toStringAsFixed(0)}%",
-                                  titleStyle: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                PieChartSectionData(
-                                  value: 100 - report.accuracy,
-                                  color: Colors.white24,
-                                  radius: 40,
-                                  title: "",
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ===== Performance Trend Text =====
-                      _buildCard(
-                        title: "اتجاه الأداء",
-                        child: Text(
-                          report.performanceTrend,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ===== Line Chart Performance =====
-                      _buildCard(
-                        title: "منحنى الأداء أثناء الاختبار",
-                        child: SizedBox(
-                          height: 200,
-                          child: LineChart(
-                            LineChartData(
-                              minY: 0,
-                              maxY: 1,
-                              gridData: FlGridData(show: false),
-                              titlesData: FlTitlesData(show: false),
-                              borderData: FlBorderData(show: false),
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: report.answersFlow
-                                      .asMap()
-                                      .entries
-                                      .map((e) {
-                                    return FlSpot(
-                                      e.key.toDouble() + 1,
-                                      e.value ? 1 : 0,
-                                    );
-                                  }).toList(),
-                                  isCurved: true,
-                                  color: Colors.cyanAccent,
-                                  barWidth: 4,
-                                  dotData: FlDotData(show: true),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ===== Overall Performance Indicator =====
-                      _buildCard(
-                        title: "مؤشر الأداء العام",
-                        child: LinearProgressIndicator(
-                          value: report.accuracy / 100,
-                          minHeight: 12,
-                          backgroundColor: Colors.white24,
-                          color: Colors.greenAccent,
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ===== Category Analysis =====
-                      _buildCard(
-                        title: "تحليل حسب الفئة",
-                        child: Column(
-                          children:
-                          report.categoryWeakness.entries.map((e) {
-                            return Padding(
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 6),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    e.key,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    "${e.value.toStringAsFixed(0)}% أخطاء",
-                                    style: TextStyle(
-                                      color:
-                                      _getWeaknessColor(e.value),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ===== Smart Summary =====
-                      _buildCard(
-                        title: "التحليل الذكي",
-                        child: Text(
-                          report.summary,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -258,7 +305,7 @@ class ReportPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 25),
+              const SizedBox(height: 20),
               child,
             ],
           ),
@@ -267,7 +314,6 @@ class ReportPage extends StatelessWidget {
     );
   }
 
-  // ================= Info Row =================
   Widget _buildInfoRow(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

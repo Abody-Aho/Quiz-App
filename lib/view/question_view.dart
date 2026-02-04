@@ -378,11 +378,6 @@ class _QuestionViewState extends State<QuestionView> {
                             await saveAnsweredQuestion(
                                 question);
 
-                            await StatisticsService()
-                                .saveSingleAnswer(
-                              isCorrect: isCorrect,
-                            );
-
                             await QuizProgressService
                                 .saveProgress(
                               score: _score,

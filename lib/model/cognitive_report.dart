@@ -18,4 +18,32 @@ class CognitiveReport {
     required this.summary,
     required this.answersFlow,   // 👈 جديد
   });
+
+  // 🔥 لتحويل الكلاس إلى Map (للحفظ في Firebase)
+  Map<String, dynamic> toMap() {
+    return {
+      'totalCorrect': totalCorrect,
+      'totalWrong': totalWrong,
+      'accuracy': accuracy,
+      'categoryWeakness': categoryWeakness,
+      'performanceTrend': performanceTrend,
+      'summary': summary,
+      'answersFlow': answersFlow,
+    };
+  }
+
+  // 🔥 لإنشاء الكلاس من بيانات Firebase
+  factory CognitiveReport.fromMap(Map<String, dynamic> map) {
+    return CognitiveReport(
+      totalCorrect: map['totalCorrect'] ?? 0,
+      totalWrong: map['totalWrong'] ?? 0,
+      accuracy: (map['accuracy'] as num?)?.toDouble() ?? 0,
+      categoryWeakness:
+      Map<String, double>.from(map['categoryWeakness'] ?? {}),
+      performanceTrend: map['performanceTrend'] ?? '',
+      summary: map['summary'] ?? '',
+      answersFlow: List<bool>.from(map['answersFlow'] ?? []),
+    );
+  }
 }
+

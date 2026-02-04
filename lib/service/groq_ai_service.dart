@@ -127,7 +127,7 @@ Any output that is not valid JSON or does not follow the exact structure is cons
       final cachedQuiz = await QuizCacheService.loadQuiz(
         categoryId: category.id,
         level: level,
-        language: category.language, // تم إضافة اللغة هنا
+        language: category.language,
       );
 
       // 1. إذا لا يوجد إنترنت
@@ -146,7 +146,7 @@ Any output that is not valid JSON or does not follow the exact structure is cons
         await QuizCacheService.saveQuiz(
           categoryId: category.id,
           level: level,
-          language: category.language, // تم إضافة اللغة هنا
+          language: category.language,
           quiz: questions.map((q) => q.toJson()).toList(),
         );
         Fluttertoast.showToast(msg: "تم إنشاء إسئله جديدة");
