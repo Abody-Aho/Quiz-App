@@ -51,7 +51,7 @@ class Option {
     return Option(
       text: json['text'],
       isCorrect: json['isCorrect'],
-      index: json['index'] ?? 0, // أضفنا قيمة افتراضية لتجنب الانهيار
+      index: json['index'] ?? 0,
     );
   }
 
@@ -59,7 +59,7 @@ class Option {
     return {
       'text': text,
       'isCorrect': isCorrect,
-      'index': index, // أضفنا الـ index هنا لكي يُحفظ في الكاش
+      'index': index,
     };
   }
 }

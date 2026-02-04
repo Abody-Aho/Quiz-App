@@ -6,7 +6,6 @@ class CognitiveReport {
   final String performanceTrend;
   final String summary;
 
-  // 👇 جديد لرسم منحنى الأداء
   final List<bool> answersFlow;
 
   CognitiveReport({
@@ -16,10 +15,9 @@ class CognitiveReport {
     required this.categoryWeakness,
     required this.performanceTrend,
     required this.summary,
-    required this.answersFlow,   // 👈 جديد
+    required this.answersFlow,
   });
 
-  // 🔥 لتحويل الكلاس إلى Map (للحفظ في Firebase)
   Map<String, dynamic> toMap() {
     return {
       'totalCorrect': totalCorrect,
@@ -32,7 +30,6 @@ class CognitiveReport {
     };
   }
 
-  // 🔥 لإنشاء الكلاس من بيانات Firebase
   factory CognitiveReport.fromMap(Map<String, dynamic> map) {
     return CognitiveReport(
       totalCorrect: map['totalCorrect'] ?? 0,
