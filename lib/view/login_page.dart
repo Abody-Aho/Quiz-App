@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:exam/view/language_selection_page.dart';
+import 'package:exam/view/category_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../core/class/route_transitions.dart';
@@ -29,9 +29,10 @@ class _LoginPageState extends State<LoginPage> {
 
     if (user != null) {
       await saveGoogleUser(user);
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        AppRoute.fadeSlide(const LanguageSelectionPage()),
+        AppRoute.fadeSlide(const CategoryPage()),
       );
     } else {
       ScaffoldMessenger.of(
@@ -68,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
   void _continueAsGuest() {
     Navigator.pushReplacement(
       context,
-      AppRoute.fadeSlide(const LanguageSelectionPage()),
+      AppRoute.fadeSlide(const CategoryPage()),
     );
   }
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/class/route_transitions.dart';
-import 'language_selection_page.dart';
+import 'category_page.dart';
 import 'onboarding_view.dart';
 
 // ================= Splash Page =================
@@ -32,14 +32,16 @@ class _SplashPageState extends State<SplashPage> {
 
     if (isFirstTime) {
       await prefs.setBool('isFirstTime', false);
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         AppRoute.fadeSlide(const OnboardingView()),
       );
     } else {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        AppRoute.fadeSlide(const LanguageSelectionPage()),
+        AppRoute.fadeSlide(const CategoryPage()),
       );
     }
   }

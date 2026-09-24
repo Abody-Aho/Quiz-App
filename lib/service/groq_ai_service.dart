@@ -29,15 +29,18 @@ ${category.title}
 Scope and Topics:
 ${category.prompt}
 
+Target Language (MANDATORY):
+${category.language}
+
 Difficulty Level (MANDATORY):
 $level
 
 Rules and constraints:
+- Generate ALL questions, answer options, and explanations STRICTLY in the target language: ${category.language}.
+- The language of ALL questions and options must be PERFECT and grammatically correct in ${category.language}.
+- Do NOT mix languages under any circumstances.
 - The difficulty of ALL questions must strictly follow the provided difficulty level.
 - Questions must be academically strong, clear, precise, and professionally written.
-- The language must be PERFECT and grammatically correct.
-- Use ONLY ONE language (Arabic or English) matching the category language.
-- Do NOT mix languages under any circumstances.
 - Questions must test real understanding, reasoning, and application (not memorization unless the level requires it).
 - Avoid ambiguity, vague phrasing, trick questions, or misleading wording.
 - Do NOT repeat questions, concepts, or answer options.
