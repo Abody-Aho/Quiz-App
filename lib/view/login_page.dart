@@ -47,18 +47,23 @@ class _LoginPageState extends State<LoginPage> {
     final doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
     final snapshot = await doc.get();
+    final fallbackName = user.displayName ?? user.email?.split('@').first ?? 'Google User';
 
     if (!snapshot.exists) {
       await doc.set({
-        'displayName': user.displayName,
-        'photoURL': user.photoURL,
+        'displayName': fallbackName,
+        'email': user.email ?? '',
+        'photoURL': user.photoURL ?? '',
         'correctAnswers': 0,
         'wrongAnswers': 0,
+        'lastSeen': FieldValue.serverTimestamp(),
       });
     } else {
       await doc.update({
-        'displayName': user.displayName,
-        'photoURL': user.photoURL,
+        'displayName': user.displayName ?? snapshot.data()?['displayName'] ?? fallbackName,
+        'email': user.email ?? snapshot.data()?['email'] ?? '',
+        'photoURL': user.photoURL ?? snapshot.data()?['photoURL'] ?? '',
+        'lastSeen': FieldValue.serverTimestamp(),
       });
     }
   }

@@ -12,6 +12,7 @@ import '../core/class/route_transitions.dart';
 import '../service/auth_service.dart';
 import '../service/global_cognitive_analyzer.dart';
 import '../service/report_history_service.dart';
+import 'admin_dashboard_page.dart';
 import 'global_report_page.dart';
 
 // ================= Profile Page =================
@@ -51,16 +52,19 @@ class _ProfilePageState extends State<ProfilePage> {
     final prefs = await SharedPreferences.getInstance();
     final localCorrect = prefs.getInt('correct') ?? 0;
     final localWrong = prefs.getInt('wrong') ?? 0;
+    final fallbackName = user.displayName ?? user.email?.split('@').first ?? 'Google User';
 
     await doc.set({
-      'displayName': user.displayName,
-      'photoURL': user.photoURL,
+      'displayName': user.displayName ?? snapshot.data()?['displayName'] ?? fallbackName,
+      'email': user.email ?? snapshot.data()?['email'] ?? '',
+      'photoURL': user.photoURL ?? snapshot.data()?['photoURL'] ?? '',
       'correctAnswers': snapshot.exists
           ? snapshot['correctAnswers'] ?? 0
           : localCorrect,
       'wrongAnswers': snapshot.exists
           ? snapshot['wrongAnswers'] ?? 0
           : localWrong,
+      'lastSeen': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -258,6 +262,20 @@ class _ProfilePageState extends State<ProfilePage> {
                   ), 
 
                   const SizedBox(height: 24),
+
+                  // ================= Admin Dashboard Button (Only for Admin) =================
+                  if (!isGuest && _auth.currentUser?.email?.toLowerCase() == kAdminEmail) ...[
+                    _gradientActionButton(
+                      icon: Icons.admin_panel_settings_rounded,
+                      title: "لوحة تحكم المسؤول",
+                      gradient: const [Color(0xFFD97706), Color(0xFFF59E0B)],
+                      onPressed: () => Navigator.push(
+                        context,
+                        AppRoute.fadeSlide(const AdminDashboardPage()),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
 
                   // ================= Navigation Action Buttons =================
                   _gradientActionButton(
