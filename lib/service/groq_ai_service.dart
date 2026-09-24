@@ -23,7 +23,7 @@ Randomization Seed:
 $seed
 Use this seed to intentionally maximize variation and avoid similarity with any previous questions.
 
-Category:
+Category Title:
 ${category.title}
 
 Scope and Topics:
@@ -72,6 +72,14 @@ Output format rules (CRITICAL):
 Any output that is not valid JSON or does not follow the exact structure is considered incorrect.
 """;
 
+    return await _generateWithModel(prompt, "qwen/qwen3.8-27b");
+  }
+
+  // ================= Private Generator Helper =================
+  Future<List<Question>> _generateWithModel(
+    String prompt,
+    String modelName,
+  ) async {
     try {
       final res = await http.post(
         Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
@@ -80,19 +88,30 @@ Any output that is not valid JSON or does not follow the exact structure is cons
           'Authorization': 'Bearer $groqApiKey',
         },
         body: jsonEncode({
-          "model": "llama-3.1-8b-instant",
+          "model": modelName,
           "messages": [
             {"role": "user", "content": prompt},
           ],
-          "temperature": 0.9,
+          "temperature": 0.8,
           "top_p": 0.9,
         }),
-      );
+      ).timeout(const Duration(seconds: 25));
 
-      if (res.statusCode != 200) return [];
+      if (res.statusCode == 429) {
+        // إذا حدث ضغط أو Rate Limit حاول نموذج آخر احتياطي
+        if (modelName != "openai/gpt-oss-20b") {
+          await Future.delayed(const Duration(milliseconds: 1500));
+          return _generateWithModel(prompt, "openai/gpt-oss-20b");
+        }
+        return [];
+      }
+
+      if (res.statusCode != 200) {
+        return [];
+      }
 
       final body = jsonDecode(utf8.decode(res.bodyBytes));
-      String content = body['choices'][0]['message']['content'];
+      String content = body['choices'][0]['message']['content'] ?? '';
       content = _extractJson(content);
 
       final List data = jsonDecode(content);
@@ -103,6 +122,8 @@ Any output that is not valid JSON or does not follow the exact structure is cons
           int correctIndex = q['correctIndex'] ?? 0;
           final List optionsRaw = q['options'];
 
+          if (optionsRaw.length < 4) continue;
+
           final options = List.generate(4, (i) {
             return Option(
               text: optionsRaw[i].toString(),
@@ -112,7 +133,9 @@ Any output that is not valid JSON or does not follow the exact structure is cons
           });
 
           questions.add(Question(text: q['question'].toString(), options: options));
-        } catch (_) { continue; }
+        } catch (_) {
+          continue;
+        }
       }
       return questions;
     } catch (_) {
@@ -126,53 +149,58 @@ Any output that is not valid JSON or does not follow the exact structure is cons
     String level,
   ) async {
     try {
-      // تمرير اللغة للكاش لتمييز الاختبارات
-      final cachedQuiz = await QuizCacheService.loadQuiz(
-        categoryId: category.id,
-        level: level,
-        language: category.language,
-      );
+      final bool hasNet = await ConnectivityService.hasInternet();
 
-      // 1. إذا لا يوجد إنترنت
-      if (!await ConnectivityService.hasInternet()) {
+      // 1. إذا كان المستخدم بدون إنترنت -> جلب الأسئلة المحفوظة فقط
+      if (!hasNet) {
+        final cachedQuiz = await QuizCacheService.loadQuiz(
+          categoryId: category.id,
+          level: level,
+          language: category.language,
+        );
+
         if (cachedQuiz != null && cachedQuiz.isNotEmpty) {
+          Fluttertoast.showToast(msg: "تم استخدام اسئلة محفوظة سابقاً (وضع بدون إنترنت)");
           return cachedQuiz.map((e) => Question.fromJson(e)).toList();
         }
         return [];
       }
 
-      // 2. يوجد إنترنت → حاول التوليد
-      final questions = await generateQuizByCategory(category, level);
+      // 2. إذا كان المستخدم متصلاً بالإنترنت -> توليد أسئلة جديدة دائماً
+      List<Question> questions = await generateQuizByCategory(category, level);
+
+      // إذا حدث فشل مؤقت في المحاولة الأولى، جرب إعادة التوليد
+      if (questions.isEmpty) {
+        questions = await generateQuizByCategory(category, level);
+      }
 
       if (questions.isNotEmpty) {
-        // حفظ في الكاش مع تحديد اللغة
+        // حفظ الأسئلة الجديدة في الكاش لاستخدامها وقت انقطاع الإنترنت مستقبلاً
         await QuizCacheService.saveQuiz(
           categoryId: category.id,
           level: level,
           language: category.language,
           quiz: questions.map((q) => q.toJson()).toList(),
         );
-        Fluttertoast.showToast(msg: "تم إنشاء إسئله جديدة");
+        Fluttertoast.showToast(msg: "تم إنشاء أسئلة جديدة");
         return questions;
+      } else {
+        Fluttertoast.showToast(msg: "تعذر توليد الأسئلة، يرجى المحاولة مرة أخرى");
       }
-
-      // 3. فشل التوليد → ارجع للكاش
-      if (cachedQuiz != null && cachedQuiz.isNotEmpty) {
-        Fluttertoast.showToast(msg: "تم استخدام اسئلة محفوظة سابقاً");
-        return cachedQuiz.map((e) => Question.fromJson(e)).toList();
-      }
-    } catch (e) {
-      print("Error loading questions: $e");
-    }
+    } catch (_) {}
     return [];
   }
 
   String _extractJson(String text) {
+    // إزالة أي أوسام تفكير أو علامات كود
+    text = text.replaceAll(RegExp(r'<think>[\s\S]*?<\/think>'), '');
+    text = text.replaceAll(RegExp(r'```json\s*'), '').replaceAll(RegExp(r'```\s*'), '');
+
     final start = text.indexOf('[');
     final end = text.lastIndexOf(']');
     if (start != -1 && end != -1 && end > start) {
       return text.substring(start, end + 1);
     }
-    return text;
+    return text.trim();
   }
 }
