@@ -4,111 +4,171 @@ import '../model/model.dart';
 class OptionsWidget extends StatelessWidget {
   final Question question;
   final ValueChanged<Option> onClickedOption;
+  final bool isArabic;
 
   const OptionsWidget({
     super.key,
     required this.question,
     required this.onClickedOption,
+    this.isArabic = true,
   });
+
+  static const List<String> arBadges = ['أ', 'ب', 'ج', 'د'];
+  static const List<String> enBadges = ['A', 'B', 'C', 'D'];
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        ...question.options.map((option) => buildOption(context, option)),
-      ],
+      children: question.options.asMap().entries.map((entry) {
+        final index = entry.key;
+        final option = entry.value;
+        return buildOption(context, option, index);
+      }).toList(),
     );
   }
 
-  Color getColorForOption(Option option, Question question) {
+  Widget buildOption(BuildContext context, Option option, int index) {
     final isSelected = option == question.selectedOption;
+    final isConfirmed = question.isConfirmed;
+    final isCorrect = option.isCorrect;
 
-    // قبل التأكيد
-    if (!question.isConfirmed) {
-      return isSelected ? Colors.purple : Colors.grey.shade400;
+    // Badges
+    final badgeText = isArabic
+        ? (index < arBadges.length ? arBadges[index] : '${index + 1}')
+        : (index < enBadges.length ? enBadges[index] : '${index + 1}');
+
+    // Color definitions
+    Color borderColor = Colors.white.withValues(alpha: 0.15);
+    Color bgColor = Colors.white.withValues(alpha: 0.08);
+    Color textColor = Colors.white;
+    Color badgeBgColor = Colors.white.withValues(alpha: 0.15);
+    Color badgeTextColor = Colors.white70;
+    Widget? statusIcon;
+
+    if (!isConfirmed) {
+      if (isSelected) {
+        borderColor = const Color(0xFF8B5CF6); // Vibrant Purple
+        bgColor = const Color(0xFF8B5CF6).withValues(alpha: 0.25);
+        badgeBgColor = const Color(0xFF8B5CF6);
+        badgeTextColor = Colors.white;
+        statusIcon = const Icon(
+          Icons.radio_button_checked,
+          color: Color(0xFFA78BFA),
+          size: 22,
+        );
+      } else {
+        statusIcon = Icon(
+          Icons.radio_button_off,
+          color: Colors.white.withValues(alpha: 0.3),
+          size: 22,
+        );
+      }
+    } else {
+      if (isCorrect) {
+        borderColor = const Color(0xFF10B981); // Emerald Green
+        bgColor = const Color(0xFF10B981).withValues(alpha: 0.25);
+        badgeBgColor = const Color(0xFF10B981);
+        badgeTextColor = Colors.white;
+        statusIcon = const Icon(
+          Icons.check_circle_rounded,
+          color: Color(0xFF34D399),
+          size: 24,
+        );
+      } else if (isSelected && !isCorrect) {
+        borderColor = const Color(0xFFEF4444); // Crimson Red
+        bgColor = const Color(0xFFEF4444).withValues(alpha: 0.25);
+        badgeBgColor = const Color(0xFFEF4444);
+        badgeTextColor = Colors.white;
+        statusIcon = const Icon(
+          Icons.cancel_rounded,
+          color: Color(0xFFF87171),
+          size: 24,
+        );
+      } else {
+        borderColor = Colors.white.withValues(alpha: 0.08);
+        bgColor = Colors.white.withValues(alpha: 0.04);
+        textColor = Colors.white38;
+      }
     }
 
-    // بعد التأكيد
-    if (option.isCorrect) return Colors.green;
-    if (isSelected && !option.isCorrect) return Colors.red;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (!question.isConfirmed) {
+                onClickedOption(option);
+              }
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: borderColor,
+                  width: isSelected || (isConfirmed && (isCorrect || isSelected)) ? 2 : 1.2,
+                ),
+                boxShadow: isSelected || (isConfirmed && isCorrect)
+                    ? [
+                        BoxShadow(
+                          color: borderColor.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    : [],
+              ),
+              child: Row(
+                children: [
+                  // Option Badge (A/B/C/D or أ/ب/ج/د)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: badgeBgColor,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      badgeText,
+                      style: TextStyle(
+                        color: badgeTextColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
 
-    return Colors.grey.shade400;
-  }
+                  const SizedBox(width: 14),
 
-  Color getBackgroundColor(Option option, Question question) {
-    final isSelected = option == question.selectedOption;
+                  // Option Text
+                  Expanded(
+                    child: Text(
+                      option.text,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: textColor,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
 
-    // قبل التأكيد
-    if (!question.isConfirmed) {
-      return isSelected
-          ? Colors.purple.withValues(alpha: 0.15)
-          : Colors.grey.shade200;
-    }
+                  const SizedBox(width: 8),
 
-    // بعد التأكيد
-    if (option.isCorrect) {
-      return Colors.green.withValues(alpha: 0.15);
-    }
-
-    if (isSelected && !option.isCorrect) {
-      return Colors.red.withValues(alpha: 0.15);
-    }
-
-    return Colors.grey.shade200;
-  }
-
-  Widget getIconForOption(Option option, Question question) {
-    final isSelected = option == question.selectedOption;
-
-    // قبل التأكيد
-    if (!question.isConfirmed) {
-      return isSelected
-          ? const Icon(Icons.radio_button_checked, color: Colors.purple)
-          : const Icon(Icons.radio_button_off, color: Colors.grey);
-    }
-
-    // بعد التأكيد
-    if (option.isCorrect) {
-      return const Icon(Icons.check_circle, color: Colors.green);
-    }
-
-    if (isSelected && !option.isCorrect) {
-      return const Icon(Icons.cancel, color: Colors.red);
-    }
-
-    return const SizedBox.shrink();
-  }
-
-
-
-  Widget buildOption(BuildContext context, Option option) {
-    final color = getColorForOption(option, question);
-
-    return GestureDetector(
-      onTap: () {
-        if (!question.isConfirmed) {
-          onClickedOption(option);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: getBackgroundColor(option, question),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color, width: 2),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                option.text,
-                style: const TextStyle(fontSize: 18),
+                  // Status Icon
+                  if (statusIcon != null) statusIcon,
+                ],
               ),
             ),
-            getIconForOption(option, question),
-          ],
+          ),
         ),
       ),
     );

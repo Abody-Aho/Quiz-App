@@ -15,7 +15,6 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-
   // ================= Lifecycle =================
   @override
   void initState() {
@@ -50,11 +49,88 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F123A),
-      body: Center(
-        child: CircleAvatar(
-          backgroundImage: const AssetImage('asset/images/quiz2.jpg'),
-          radius: 80,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F0C20),
+              Color(0xFF1E1035),
+              Color(0xFF2A0845),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
+
+              // Logo Avatar with glowing border
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
+                      blurRadius: 25,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                ),
+                child: const CircleAvatar(
+                  backgroundImage: AssetImage('asset/images/quiz2.jpg'),
+                  radius: 75,
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // Title
+              const Text(
+                "منصة الاختبارات الذكية",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Subtitle
+              const Text(
+                "اختبارات متطورة مدعومة بالذكاء الاصطناعي",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+
+              const Spacer(),
+
+              // Loading Indicator
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Color(0xFFA78BFA),
+                ),
+              ),
+
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

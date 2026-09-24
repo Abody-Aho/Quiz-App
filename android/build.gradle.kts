@@ -28,6 +28,15 @@ subprojects {
 }
 
 subprojects {
+    if (project.name != "app") {
+        afterEvaluate {
+            val extension = project.extensions.findByType(com.android.build.gradle.BaseExtension::class.java)
+            extension?.ndkVersion = "29.0.13599879"
+        }
+    }
+}
+
+subprojects {
     project.evaluationDependsOn(":app")
 }
 

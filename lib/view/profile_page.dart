@@ -43,18 +43,11 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
   }
 
-  // تحديث البيانات عند الرجوع للصفحة
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-  }
-
   // ================= Save Google User =================
   Future<void> saveGoogleUser(User user) async {
     final doc = _firestore.collection('users').doc(user.uid);
     final snapshot = await doc.get();
 
-    // 🔄 جلب إحصائيات الضيف (إن وُجدت)
     final prefs = await SharedPreferences.getInstance();
     final localCorrect = prefs.getInt('correct') ?? 0;
     final localWrong = prefs.getInt('wrong') ?? 0;
@@ -79,8 +72,8 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user == null) {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        displayName = "Guest Name";
-        email = "guest@quiz-app.local";
+        displayName = "زائر التطبيق";
+        email = "مستخدم ضيف";
         imageUrl = "";
         correct = prefs.getInt('correct') ?? 0;
         wrong = prefs.getInt('wrong') ?? 0;
@@ -121,186 +114,228 @@ class _ProfilePageState extends State<ProfilePage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xff1D2671), Color(0xffC33764)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F0C20),
+              Color(0xFF1E1035),
+              Color(0xFF2A0845),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-        child: Skeletonizer(
-          enabled: isLoading,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
+        child: SafeArea(
+          child: Skeletonizer(
+            enabled: isLoading,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
 
-                // ================= Avatar =================
-                CircleAvatar(
-                  radius: 55,
-                  backgroundColor: Colors.white,
-                  backgroundImage: imageUrl.isNotEmpty
-                      ? NetworkImage(imageUrl)
-                      : null,
-                  child: imageUrl.isEmpty
-                      ? const Icon(Icons.person, size: 55, color: Colors.purple)
-                      : null,
-                ),
-
-                const SizedBox(height: 12),
-
-                // ================= Name =================
-                Text(
-                  displayName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                // ================= Email =================
-                Text(
-                  email,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                // ================= Guest Notice =================
-                if (isGuest)
+                  // ================= Avatar =================
                   Container(
-                    margin: const EdgeInsets.only(top: 14, bottom: 10),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                          blurRadius: 18,
+                          spreadRadius: 2,
+                        )
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor: const Color(0xFF1E163B),
+                      backgroundImage: imageUrl.isNotEmpty
+                          ? NetworkImage(imageUrl)
+                          : null,
+                      child: imageUrl.isEmpty
+                          ? const Icon(
+                              Icons.person_rounded,
+                              size: 48,
+                              color: Color(0xFFA78BFA),
+                            )
+                          : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ================= Name =================
+                  Text(
+                    displayName,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 21,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // ================= Email =================
+                  Text(
+                    email,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white60,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  // ================= Guest Notice =================
+                  if (isGuest)
+                    Container(
+                      margin: const EdgeInsets.only(top: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: const Text(
+                        "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
+                        style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    child: const Text(
-                      "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                      textAlign: TextAlign.center,
+
+                  const SizedBox(height: 22),
+
+                  // ================= Stat Cards =================
+                  InkWell(
+                    onTap: isGuest
+                        ? () => Fluttertoast.showToast(
+                              msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                            )
+                        : () => Navigator.push(
+                              context,
+                              AppRoute.fadeSlide(
+                                ReviewQuestionsPage(showCorrect: true),
+                              ),
+                            ),
+                    borderRadius: BorderRadius.circular(20),
+                    child: _buildGlassStatCard(
+                      title: "إجابات صحيحة",
+                      value: correct,
+                      icon: Icons.check_circle_rounded,
+                      color: const Color(0xFF10B981),
                     ),
                   ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 12),
 
-                // ================= Statistics =================
-                InkWell(
-                  onTap: isGuest
-                      ? () => Fluttertoast.showToast(
-                          msg: "يجب تسجيل الدخول لمراجعة الإجابات",
-                        )
-                      : () => Navigator.push(
-                          context,
-                          AppRoute.fadeSlide(
-                            ReviewQuestionsPage(showCorrect: true),
+                  InkWell(
+                    onTap: isGuest
+                        ? () => Fluttertoast.showToast(
+                              msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                            )
+                        : () => Navigator.push(
+                              context,
+                              AppRoute.fadeSlide(
+                                ReviewQuestionsPage(showCorrect: false),
+                              ),
+                            ),
+                    borderRadius: BorderRadius.circular(20),
+                    child: _buildGlassStatCard(
+                      title: "إجابات خاطئة",
+                      value: wrong,
+                      icon: Icons.cancel_rounded,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  ), 
+
+                  const SizedBox(height: 24),
+
+                  // ================= Navigation Action Buttons =================
+                  _gradientActionButton(
+                    icon: Icons.bar_chart_rounded,
+                    title: "لوحة المتصدرين",
+                    gradient: const [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
+                    onPressed: () => Navigator.push(
+                      context,
+                      AppRoute.fadeSlide(const StatisticsPage()),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  _gradientActionButton(
+                    icon: Icons.psychology_rounded,
+                    title: "آخر تقرير معرفي",
+                    gradient: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                    onPressed: () => isGuest
+                        ? Fluttertoast.showToast(
+                            msg: "يجب تسجيل الدخول لتظهر التقارير",
+                          )
+                        : Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LastAnalysisPage(),
+                            ),
                           ),
-                        ),
-                  child: _buildStatCard(
-                    title: "أجابات صحيحة",
-                    value: correct,
-                    icon: Icons.check_circle,
-                    color: Colors.greenAccent,
                   ),
-                ),
-                InkWell(
-                  onTap: isGuest
-                      ? () => Fluttertoast.showToast(
-                          msg: "يجب تسجيل الدخول لمراجعة الإجابات",
-                        )
-                      : () => Navigator.push(
+
+                  const SizedBox(height: 14),
+
+                  _gradientActionButton(
+                    icon: Icons.auto_graph_rounded,
+                    title: "التقرير المعرفي الشامل",
+                    gradient: const [Color(0xFF2563EB), Color(0xFF8B5CF6)],
+                    onPressed: () {
+                      if (isGuest) {
+                        Fluttertoast.showToast(
+                          msg: "يجب تسجيل الدخول لتظهر التقارير",
+                        );
+                      } else {
+                        final reports = ReportHistoryService.getAllReports();
+                        final _ = GlobalCognitiveAnalyzer.analyzeAll(reports);
+                        Navigator.push(
                           context,
-                          AppRoute.fadeSlide(
-                            ReviewQuestionsPage(showCorrect: false),
+                          MaterialPageRoute(
+                            builder: (_) => GlobalReportPage(),
                           ),
-                        ),
-                  child: _buildStatCard(
-                    title: "أجابات خاطئة",
-                    value: wrong,
-                    icon: Icons.cancel,
-                    color: Colors.redAccent,
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                _statisticsButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    AppRoute.fadeSlide(const StatisticsPage()),
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                _reportButton(
-                  icon: Icons.psychology,
-                  title: "آخر تقرير معرفي",
-                  onPressed: () => isGuest
-                      ? Fluttertoast.showToast(
-                          msg: "يجب تسجيل الدخول لتظهر القارير",
-                        )
-                      : Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => LastAnalysisPage()),
-                        ),
-                ),
-
-                const SizedBox(height: 25),
-
-                _reportButton(
-                  icon: Icons.auto_graph,
-                  title: "التقرير المعرفي الشامل",
-                  onPressed: () {
-                    if(isGuest){
-                      Fluttertoast.showToast(
-                        msg: "يجب تسجيل الدخول لتظهر القارير",
-                      );
-                    }else{
-                      final reports = ReportHistoryService.getAllReports();
-                      final _ = GlobalCognitiveAnalyzer.analyzeAll(
-                        reports,
-                      );
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => GlobalReportPage()),
-                      );
-                    }
-
-                  },
-                ),
-
-                const SizedBox(height: 25),
-
-                // ================= Actions =================
-                if (isGuest)
-                  _buildGoogleButton(
-                    text: "Google تسجيل الدخول باستخدام",
-                    onTap: () async {
-                      final user = await authService.signInWithGoogle();
-                      if (user != null) {
-                        setState(() => isLoading = true);
-                        await saveGoogleUser(user);
-                        await _loadUserData();
+                        );
                       }
                     },
                   ),
 
-                if (!isGuest)
-                  _buildLogoutButton(
-                    onTap: () => showDeleteConfirmDialog(context: context),
-                  ),
-              ],
+                  const SizedBox(height: 24),
+
+                  // ================= Auth Action =================
+                  if (isGuest)
+                    _buildGoogleButton(
+                      text: "تسجيل الدخول باستخدام Google",
+                      onTap: () async {
+                        final user = await authService.signInWithGoogle();
+                        if (user != null) {
+                          setState(() => isLoading = true);
+                          await saveGoogleUser(user);
+                          await _loadUserData();
+                        }
+                      },
+                    ),
+
+                  if (!isGuest)
+                    _buildLogoutButton(
+                      onTap: () => showDeleteConfirmDialog(context: context),
+                    ),
+
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -310,87 +345,100 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // ================= Widgets =================
 
-  Widget _statisticsButton({required VoidCallback onPressed}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 55,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          elevation: 6,
+  Widget _buildGlassStatCard({
+    required String title,
+    required int value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E163B).withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: 0.35),
+          width: 1.2,
         ),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6A1B9A), Color(0xffC33764)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
-            borderRadius: BorderRadius.circular(14),
+            child: Icon(icon, color: color, size: 24),
           ),
-          child: const Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bar_chart_rounded, color: Colors.white),
-                SizedBox(width: 10),
-                Text(
-                  'لوحة المتصدرين',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
+          Text(
+            value.toString(),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _reportButton({
-    required VoidCallback onPressed,
-    required IconData icon,
+  Widget _gradientActionButton({
     required String title,
+    required IconData icon,
+    required List<Color> gradient,
+    required VoidCallback onPressed,
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 55,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          elevation: 6,
+      height: 52,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradient),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.first.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6A1B9A), Color(0xffC33764)],
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
             ),
-            borderRadius: BorderRadius.circular(14),
           ),
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: Colors.white),
-                const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+          icon: Icon(icon, color: Colors.white, size: 22),
+          label: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -403,14 +451,21 @@ class _ProfilePageState extends State<ProfilePage> {
     required VoidCallback onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -419,7 +474,11 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(width: 12),
             Text(
               text,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
@@ -429,59 +488,38 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildLogoutButton({required VoidCallback onTap}) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.redAccent,
-          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, color: Colors.white),
+            Icon(Icons.logout_rounded, color: Colors.white, size: 20),
             SizedBox(width: 10),
             Text(
               "تسجيل الخروج",
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required String title,
-    required int value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 10,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.2),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-        trailing: Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
         ),
       ),
     );
@@ -494,17 +532,26 @@ class _ProfilePageState extends State<ProfilePage> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF2E2A50),
+          backgroundColor: const Color(0xFF1B1537),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
-          title: const Text(
-            'تسجيل خروج',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          title: const Row(
+            children: [
+              Icon(Icons.logout_rounded, color: Colors.redAccent),
+              SizedBox(width: 8),
+              Text(
+                'تسجيل خروج',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           content: const Text(
             'هل أنت متأكد من تسجيل الخروج؟',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
           actions: [
             TextButton(
@@ -513,15 +560,19 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ElevatedButton(
               onPressed: () async {
+                final nav = Navigator.of(context);
                 await authService.signOut();
                 if (!mounted) return;
                 setState(() => isLoading = true);
                 await _loadUserData();
                 if (!mounted) return;
-                Navigator.pop(context);
+                nav.pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text('نعم', style: TextStyle(color: Colors.white)),
             ),

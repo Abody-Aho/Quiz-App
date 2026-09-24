@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -62,7 +63,6 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-
   // ================= Controllers & Keys =================
   TextEditingController titleController = TextEditingController();
   TextEditingController promptController = TextEditingController();
@@ -84,6 +84,101 @@ class _CategoryPageState extends State<CategoryPage> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  // ================= Permission Helper =================
+  Future<XFile?> _pickImageWithPermission(BuildContext dialogContext) async {
+    PermissionStatus status;
+
+    if (Platform.isAndroid) {
+      status = await Permission.photos.request();
+      if (status.isDenied) {
+        status = await Permission.storage.request();
+      }
+    } else {
+      status = await Permission.photos.request();
+    }
+
+    if (status.isGranted || status.isLimited) {
+      try {
+        final picked = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+        );
+        return picked;
+      } catch (_) {
+        return null;
+      }
+    } else {
+      if (!dialogContext.mounted) return null;
+      _showPermissionDeniedDialog(dialogContext);
+      return null;
+    }
+  }
+
+  void _showPermissionDeniedDialog(BuildContext dialogContext) {
+    showDialog(
+      context: dialogContext,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1B1537),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.photo_library_rounded, color: Color(0xFFA78BFA)),
+              SizedBox(width: 8),
+              Text(
+                'إذن الوصول للصور',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'لاختيار صورة للفئة، يجب السماح للتطبيق بالوصول إلى معرض الصور. يرجى قبول الإذن من الإعدادات.',
+            style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  openAppSettings();
+                },
+                child: const Text(
+                  'فتح الإعدادات',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ================= Local Data Loading =================
@@ -123,7 +218,7 @@ class _CategoryPageState extends State<CategoryPage> {
   Future<void> saveCategories(List<Category> categories) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> jsonList =
-    categories.map((c) => jsonEncode(c.toMap())).toList();
+        categories.map((c) => jsonEncode(c.toMap())).toList();
     await prefs.setStringList('categories', jsonList);
   }
 
@@ -148,9 +243,6 @@ class _CategoryPageState extends State<CategoryPage> {
       filteredCategories = List.from(categories);
     });
   }
-
-  static const Color backgroundPurple = Color(0xFF1E1A40);
-  static const Color primaryPurple = Color(0xFF6C63FF);
 
   // ================= Refresh =================
   Future<void> _refreshPage() async {
@@ -182,133 +274,265 @@ class _CategoryPageState extends State<CategoryPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: backgroundPurple,
         drawer: const Drawer(child: ProfilePage()),
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          centerTitle: true,
-          title: const Text(
-            "اختر الفئة",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F0C20),
+                Color(0xFF1E1035),
+                Color(0xFF2A0845),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: RefreshIndicator(
-          onRefresh: _refreshPage,
-          color: primaryPurple,
-          backgroundColor: Colors.white,
-          child: Skeletonizer(
-            enabled: isLoading,
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredCategories.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.85,
-              ),
-              itemBuilder: (context, index) {
-                final category = filteredCategories[index];
-                return GestureDetector(
-                  onLongPress: () => _showEditCategoryDialog(
-                    category,
-                    categories.indexOf(category),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Custom Top Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
                   ),
-                  onTap: () => _showDifficultyDialog(context, category),
-                  child: Container(
-                    key: index == 0 ? _firstCategoryKey : null,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          primaryPurple.withValues(alpha: 0.8),
-                          primaryPurple.withValues(alpha: 0.6),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildCategoryImage(category.image),
-                          const SizedBox(height: 8),
-                          Text(
-                            category.title,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
-                            ),
+                  child: Row(
+                    children: [
+                      Builder(
+                        builder: (context) => InkWell(
+                          onTap: () => Scaffold.of(context).openDrawer(),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.black26,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              category.language,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.15),
                               ),
                             ),
+                            child: const Icon(
+                              Icons.menu_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
                           ),
-                        ],
+                        ),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          "اختر الفئة",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 42), // Balance for drawer button
+                    ],
+                  ),
+                ),
+
+                // Grid Content
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _refreshPage,
+                    color: const Color(0xFF8B5CF6),
+                    backgroundColor: const Color(0xFF1E163B),
+                    child: Skeletonizer(
+                      enabled: isLoading,
+                      child: GridView.builder(
+                        padding: const EdgeInsets.all(18),
+                        itemCount: filteredCategories.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.85,
+                        ),
+                        itemBuilder: (context, index) {
+                          final category = filteredCategories[index];
+                          return GestureDetector(
+                            onLongPress: () => _showEditCategoryDialog(
+                              category,
+                              categories.indexOf(category),
+                            ),
+                            onTap: () =>
+                                _showDifficultyDialog(context, category),
+                            child: Container(
+                              key: index == 0 ? _firstCategoryKey : null,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1E163B)
+                                    .withValues(alpha: 0.8),
+                                borderRadius: BorderRadius.circular(26),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                  width: 1.2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        Colors.black.withValues(alpha: 0.25),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Image Frame with subtle glow
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.06),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF6C63FF)
+                                                .withValues(alpha: 0.2),
+                                            blurRadius: 12,
+                                            spreadRadius: 1,
+                                          )
+                                        ],
+                                      ),
+                                      child:
+                                          _buildCategoryImage(category.image),
+                                    ),
+                                    const SizedBox(height: 12),
+
+                                    // Title
+                                    Text(
+                                      category.title,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Language Badge Chip
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF6C63FF)
+                                            .withValues(alpha: 0.25),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFF6C63FF)
+                                              .withValues(alpha: 0.4),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.language_rounded,
+                                            size: 13,
+                                            color: Color(0xFFA78BFA),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            category.language,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFFDDD6FE),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          key: _fabKey,
-          backgroundColor: primaryPurple,
-          child: const Icon(Icons.add, color: Colors.white),
-          onPressed: () {
-            _clearCategoryForm();
-            _showAddCategoryDialog();
-          },
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            key: _fabKey,
+            elevation: 0,
+            highlightElevation: 0,
+            backgroundColor: Colors.transparent,
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+            onPressed: () {
+              _clearCategoryForm();
+              _showAddCategoryDialog();
+            },
+          ),
         ),
-        floatingActionButtonLocation:
-            FloatingActionButtonLocation.centerFloat,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }
 
   // ================= Difficulty Dialog =================
   void _showDifficultyDialog(BuildContext context, Category category) {
-    const Color primaryPurple = Color(0xFF6C63FF);
-    const Color lightPurple = Color(0xFFF3F2FF);
     final bool isArabic = category.direction == TextDirection.rtl;
 
     showScaleDialog(
       context: context,
       child: Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: const Color(0xFF2E2A55),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        backgroundColor: const Color(0xFF1B1537),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Header Icon
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+                ),
+                child: const Icon(
+                  Icons.speed_rounded,
+                  color: Color(0xFFA78BFA),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 14),
+
               Text(
                 isArabic ? "اختر مستوى الصعوبة" : "Choose Difficulty",
                 style: const TextStyle(
@@ -318,29 +542,35 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
               ),
               const SizedBox(height: 6),
+
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+                  horizontal: 12,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: primaryPurple.withValues(alpha: 0.3),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Text(
                   "${isArabic ? 'لغة الاختبار' : 'Language'}: ${category.language}",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.white70,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
+              // Difficulty Buttons
               _difficultyButton(
                 title: isArabic ? "سهل" : "Easy",
-                color: primaryPurple,
-                background: lightPurple,
+                color: Colors.white,
+                background: const Color(0xFF10B981), // Emerald Green
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -359,8 +589,8 @@ class _CategoryPageState extends State<CategoryPage> {
 
               _difficultyButton(
                 title: isArabic ? "متوسط" : "Medium",
-                color: primaryPurple,
-                background: lightPurple,
+                color: Colors.white,
+                background: const Color(0xFF6C63FF), // Purple
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -380,7 +610,7 @@ class _CategoryPageState extends State<CategoryPage> {
               _difficultyButton(
                 title: isArabic ? "صعب" : "Hard",
                 color: Colors.white,
-                background: primaryPurple,
+                background: const Color(0xFFF59E0B), // Amber
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -400,7 +630,7 @@ class _CategoryPageState extends State<CategoryPage> {
               _difficultyButton(
                 title: isArabic ? "صعب جداً" : "Very Hard",
                 color: Colors.white,
-                background: const Color(0xFF4A43D1),
+                background: const Color(0xFFEF4444), // Crimson Red
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -423,7 +653,6 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
-  // ================= Widgets =================
   Widget _difficultyButton({
     required String title,
     required Color color,
@@ -431,23 +660,23 @@ class _CategoryPageState extends State<CategoryPage> {
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: SizedBox(
         width: double.infinity,
-        height: 48,
+        height: 50,
         child: ElevatedButton(
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: background,
             foregroundColor: color,
-            elevation: 0,
+            elevation: 4,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           child: Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -457,22 +686,15 @@ class _CategoryPageState extends State<CategoryPage> {
   // ================= Category Image =================
   Widget _buildCategoryImage(String imagePath) {
     if (imagePath.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          color: Colors.white24,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(Icons.code, size: 36, color: Colors.white),
-      );
+      return const Icon(Icons.code_rounded, size: 40, color: Color(0xFFA78BFA));
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: imagePath.startsWith('asset')
-          ? Image.asset(imagePath, height: 70, width: 70, fit: BoxFit.cover)
+          ? Image.asset(imagePath, height: 60, width: 60, fit: BoxFit.cover)
           : Image.file(File(imagePath),
-              height: 70, width: 70, fit: BoxFit.cover),
+              height: 60, width: 60, fit: BoxFit.cover),
     );
   }
 
@@ -491,7 +713,7 @@ class _CategoryPageState extends State<CategoryPage> {
     return null;
   }
 
-  // ================= Add / Edit / Delete =================
+  // ================= Add / Edit Dialogs =================
 
   void _showAddCategoryDialog() {
     String selectedLang = 'العربية';
@@ -499,16 +721,37 @@ class _CategoryPageState extends State<CategoryPage> {
     showScaleDialog(
       context: context,
       child: StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (dialogCtx, setDialogState) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF2E2A50),
+            backgroundColor: const Color(0xFF1B1537),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(28),
             ),
-            title: const Text(
-              'إضافة فئة جديدة',
-              style: TextStyle(color: Colors.white),
-              textAlign: TextAlign.center,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add_circle_outline_rounded,
+                    color: Color(0xFFA78BFA),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'إضافة فئة جديدة',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ],
             ),
             content: SingleChildScrollView(
               child: Form(
@@ -516,22 +759,24 @@ class _CategoryPageState extends State<CategoryPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 10),
                     CustomTextField(
                       hintText: 'العنوان',
                       titleController: titleController,
                       validator: _categoryValidator,
-                      prefixIcon: const Icon(Icons.title, color: Colors.black),
+                      prefixIcon:
+                          const Icon(Icons.title_rounded, color: Colors.black),
                       isEnglish: false,
                       textDirection: TextDirection.rtl,
                       length: 50,
                     ),
                     const SizedBox(height: 15),
                     CustomTextField(
-                      hintText: 'نوع الاسئلة',
+                      hintText: 'نوع الاسئلة (الوصف أو المواضيع)',
                       titleController: promptController,
                       validator: _categoryValidator,
                       prefixIcon: const Icon(
-                        Icons.description,
+                        Icons.description_rounded,
                         color: Colors.black,
                       ),
                       isEnglish: false,
@@ -540,23 +785,34 @@ class _CategoryPageState extends State<CategoryPage> {
                     ),
                     const SizedBox(height: 15),
 
-                    // ===== Language Selector =====
+                    // Language Selector Dropdown
                     DropdownButtonFormField<String>(
                       initialValue: availableLanguages.contains(selectedLang)
                           ? selectedLang
                           : 'أخرى',
-                      dropdownColor: const Color(0xFF2E2A50),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      dropdownColor: const Color(0xFF231B45),
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 15),
                       decoration: InputDecoration(
                         labelText: 'لغة الاختبار',
                         labelStyle: const TextStyle(color: Colors.white70),
-                        prefixIcon:
-                            const Icon(Icons.language, color: Colors.white),
+                        prefixIcon: const Icon(
+                          Icons.language_rounded,
+                          color: Color(0xFFA78BFA),
+                        ),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: Colors.white.withValues(alpha: 0.08),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
                         ),
                       ),
                       items: availableLanguages.map((String lang) {
@@ -583,39 +839,49 @@ class _CategoryPageState extends State<CategoryPage> {
                         hintText: 'أدخل اسم اللغة (مثال: Swahili)',
                         titleController: customLanguageController,
                         validator: _categoryValidator,
-                        prefixIcon:
-                            const Icon(Icons.translate, color: Colors.black),
+                        prefixIcon: const Icon(
+                          Icons.translate_rounded,
+                          color: Colors.black,
+                        ),
                         isEnglish: true,
                         textDirection: TextDirection.ltr,
                         length: 50,
                       ),
                     ],
 
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
+
+                    // Image Preview & Select
                     if (selectedImage != null)
-                      selectedImage!.path.startsWith('asset')
-                          ? Image.asset(
-                              selectedImage!.path,
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(selectedImage!.path),
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: selectedImage!.path.startsWith('asset')
+                            ? Image.asset(
+                                selectedImage!.path,
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(
+                                File(selectedImage!.path),
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+
                     TextButton.icon(
-                      icon: const Icon(Icons.image, color: Colors.white70),
+                      icon: const Icon(Icons.image_rounded,
+                          color: Color(0xFFA78BFA)),
                       label: const Text(
-                        'اختر صورة',
-                        style: TextStyle(color: Colors.white70),
+                        'اختر صورة للفئة',
+                        style: TextStyle(
+                          color: Color(0xFFDDD6FE),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       onPressed: () async {
-                        final picked = await ImagePicker().pickImage(
-                          source: ImageSource.gallery,
-                        );
+                        final picked = await _pickImageWithPermission(dialogCtx);
                         if (picked != null) {
                           final permanentPath = await saveImagePermanently(
                             File(picked.path),
@@ -632,41 +898,63 @@ class _CategoryPageState extends State<CategoryPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogCtx),
                 child: const Text(
                   'إلغاء',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final String finalLang = selectedLang == 'أخرى'
-                        ? customLanguageController.text.trim()
-                        : selectedLang;
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      final String finalLang = selectedLang == 'أخرى'
+                          ? customLanguageController.text.trim()
+                          : selectedLang;
 
-                    if (finalLang.isEmpty) return;
+                      if (finalLang.isEmpty) return;
 
-                    final direction = getDirectionForLanguage(finalLang);
+                      final direction = getDirectionForLanguage(finalLang);
 
-                    categories.add(
-                      Category(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        language: finalLang,
-                        title: titleController.text,
-                        prompt: promptController.text,
-                        image: selectedImage?.path ?? '',
-                        direction: direction,
-                      ),
-                    );
-                    await saveCategories(categories);
-                    _updateFilteredCategories();
-                    _clearCategoryForm();
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('حفظ'),
+                      categories.add(
+                        Category(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          language: finalLang,
+                          title: titleController.text,
+                          prompt: promptController.text,
+                          image: selectedImage?.path ?? '',
+                          direction: direction,
+                        ),
+                      );
+                      await saveCategories(categories);
+                      _updateFilteredCategories();
+                      _clearCategoryForm();
+                      if (!dialogCtx.mounted) return;
+                      Navigator.pop(dialogCtx);
+                    }
+                  },
+                  child: const Text(
+                    'حفظ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
             ],
           );
@@ -693,16 +981,37 @@ class _CategoryPageState extends State<CategoryPage> {
     showScaleDialog(
       context: context,
       child: StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (dialogCtx, setDialogState) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF2E2A50),
+            backgroundColor: const Color(0xFF1B1537),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(28),
             ),
-            title: const Text(
-              'تعديل الفئة',
-              style: TextStyle(color: Colors.white),
-              textAlign: TextAlign.center,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: Color(0xFFA78BFA),
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'تعديل الفئة',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ],
             ),
             content: SingleChildScrollView(
               child: Form(
@@ -710,13 +1019,16 @@ class _CategoryPageState extends State<CategoryPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 10),
                     CustomTextField(
                       hintText: 'العنوان',
                       titleController: titleController,
                       validator: _categoryValidator,
-                      prefixIcon: const Icon(Icons.title, color: Colors.black),
+                      prefixIcon:
+                          const Icon(Icons.title_rounded, color: Colors.black),
                       isEnglish: false,
-                      textDirection: getDirectionForLanguage(category.language),
+                      textDirection:
+                          getDirectionForLanguage(category.language),
                       length: 50,
                     ),
                     const SizedBox(height: 15),
@@ -725,30 +1037,36 @@ class _CategoryPageState extends State<CategoryPage> {
                       titleController: promptController,
                       validator: _categoryValidator,
                       prefixIcon: const Icon(
-                        Icons.description,
+                        Icons.description_rounded,
                         color: Colors.black,
                       ),
                       isEnglish: false,
-                      textDirection: getDirectionForLanguage(category.language),
+                      textDirection:
+                          getDirectionForLanguage(category.language),
                       length: 250,
                     ),
                     const SizedBox(height: 15),
 
-                    // ===== Language Selector =====
+                    // Language Selector
                     DropdownButtonFormField<String>(
                       initialValue: selectedLang,
-                      dropdownColor: const Color(0xFF2E2A50),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      dropdownColor: const Color(0xFF231B45),
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 15),
                       decoration: InputDecoration(
                         labelText: 'لغة الاختبار',
                         labelStyle: const TextStyle(color: Colors.white70),
-                        prefixIcon:
-                            const Icon(Icons.language, color: Colors.white),
+                        prefixIcon: const Icon(
+                          Icons.language_rounded,
+                          color: Color(0xFFA78BFA),
+                        ),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: Colors.white.withValues(alpha: 0.08),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
                         ),
                       ),
                       items: availableLanguages.map((String lang) {
@@ -775,39 +1093,48 @@ class _CategoryPageState extends State<CategoryPage> {
                         hintText: 'أدخل اسم اللغة (مثال: Swahili)',
                         titleController: customLanguageController,
                         validator: _categoryValidator,
-                        prefixIcon:
-                            const Icon(Icons.translate, color: Colors.black),
+                        prefixIcon: const Icon(
+                          Icons.translate_rounded,
+                          color: Colors.black,
+                        ),
                         isEnglish: true,
                         textDirection: TextDirection.ltr,
                         length: 50,
                       ),
                     ],
 
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
+
                     if (selectedImage != null)
-                      selectedImage!.path.startsWith('asset')
-                          ? Image.asset(
-                              selectedImage!.path,
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(selectedImage!.path),
-                              height: 80,
-                              width: 80,
-                              fit: BoxFit.cover,
-                            ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: selectedImage!.path.startsWith('asset')
+                            ? Image.asset(
+                                selectedImage!.path,
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(
+                                File(selectedImage!.path),
+                                height: 80,
+                                width: 80,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+
                     TextButton.icon(
-                      icon: const Icon(Icons.image, color: Colors.white70),
+                      icon: const Icon(Icons.image_rounded,
+                          color: Color(0xFFA78BFA)),
                       label: const Text(
                         'تغيير الصورة',
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(
+                          color: Color(0xFFDDD6FE),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       onPressed: () async {
-                        final picked = await ImagePicker().pickImage(
-                          source: ImageSource.gallery,
-                        );
+                        final picked = await _pickImageWithPermission(dialogCtx);
                         if (picked != null) {
                           final permanentPath = await saveImagePermanently(
                             File(picked.path),
@@ -824,57 +1151,81 @@ class _CategoryPageState extends State<CategoryPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogCtx),
                 child: const Text(
                   'إلغاء',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
               ),
-              TextButton(
+              TextButton.icon(
+                icon: const Icon(Icons.delete_outline_rounded,
+                    color: Colors.redAccent, size: 20),
+                label: const Text(
+                  'حذف',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                ),
                 onPressed: () {
                   showDeleteConfirmDialog(
-                    context: context,
+                    context: dialogCtx,
                     onConfirm: () async {
                       categories.removeAt(index);
                       await saveCategories(categories);
                       _updateFilteredCategories();
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
+                      if (!dialogCtx.mounted) return;
+                      Navigator.pop(dialogCtx);
                     },
                   );
                 },
-                child: const Text(
-                  'حذف',
-                  style: TextStyle(color: Colors.red),
-                ),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final String finalLang = selectedLang == 'أخرى'
-                        ? customLanguageController.text.trim()
-                        : selectedLang;
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      final String finalLang = selectedLang == 'أخرى'
+                          ? customLanguageController.text.trim()
+                          : selectedLang;
 
-                    if (finalLang.isEmpty) return;
+                      if (finalLang.isEmpty) return;
 
-                    final direction = getDirectionForLanguage(finalLang);
+                      final direction = getDirectionForLanguage(finalLang);
 
-                    categories[index] = Category(
-                      id: category.id,
-                      language: finalLang,
-                      title: titleController.text,
-                      prompt: promptController.text,
-                      image: selectedImage?.path ?? '',
-                      direction: direction,
-                    );
-                    await saveCategories(categories);
-                    _updateFilteredCategories();
-                    _clearCategoryForm();
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('تحديث'),
+                      categories[index] = Category(
+                        id: category.id,
+                        language: finalLang,
+                        title: titleController.text,
+                        prompt: promptController.text,
+                        image: selectedImage?.path ?? '',
+                        direction: direction,
+                      );
+                      await saveCategories(categories);
+                      _updateFilteredCategories();
+                      _clearCategoryForm();
+                      if (!dialogCtx.mounted) return;
+                      Navigator.pop(dialogCtx);
+                    }
+                  },
+                  child: const Text(
+                    'تحديث',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
             ],
           );
@@ -890,11 +1241,11 @@ class _CategoryPageState extends State<CategoryPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (ctx) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF2E2A50),
+          backgroundColor: const Color(0xFF1B1537),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
           title: const Row(
             children: [
@@ -916,7 +1267,7 @@ class _CategoryPageState extends State<CategoryPage> {
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
               child: const Text(
                 'إلغاء',
                 style: TextStyle(color: Colors.grey),
@@ -930,7 +1281,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
               ),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(ctx);
                 onConfirm();
               },
               child: const Text(
