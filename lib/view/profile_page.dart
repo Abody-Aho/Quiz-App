@@ -37,6 +37,8 @@ class _ProfilePageState extends State<ProfilePage> {
   int wrong = 0;
 
   bool isLoading = true;
+  bool isGoogleLoading = false;
+  String googleLoadingStatus = "جاري الاتصال بحساب Google...";
 
   @override
   void initState() {
@@ -107,256 +109,344 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // ================= Google Sign-In Handler =================
+  Future<void> _handleGoogleSignIn() async {
+    if (isGoogleLoading) return;
+
+    setState(() {
+      isGoogleLoading = true;
+      googleLoadingStatus = "جاري الاتصال بحساب Google...";
+    });
+
+    try {
+      final user = await authService.signInWithGoogle();
+
+      if (!mounted) return;
+
+      if (user != null) {
+        setState(() {
+          googleLoadingStatus = "جاري حفظ بيانات الحساب ومزامنة النتائج...";
+        });
+
+        await saveGoogleUser(user);
+        await _loadUserData();
+
+        if (!mounted) return;
+
+        Fluttertoast.showToast(
+          msg: "أهلاً بك ${user.displayName ?? ''}!",
+        );
+      } else {
+        Fluttertoast.showToast(msg: "تم إلغاء تسجيل الدخول");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Fluttertoast.showToast(msg: "تعذر تسجيل الدخول، يرجى المحاولة لاحقاً");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isGoogleLoading = false;
+        });
+      }
+    }
+  }
+
   // ================= UI =================
   @override
   Widget build(BuildContext context) {
     final bool isGuest = _auth.currentUser == null;
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F0C20),
-              Color(0xFF1E1035),
-              Color(0xFF2A0845),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Skeletonizer(
-            enabled: isLoading,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0F0C20),
+                  Color(0xFF1E1035),
+                  Color(0xFF2A0845),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: SafeArea(
+              child: Skeletonizer(
+                enabled: isLoading,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
 
-                  // ================= Avatar =================
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
-                          blurRadius: 18,
-                          spreadRadius: 2,
-                        )
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundColor: const Color(0xFF1E163B),
-                      backgroundImage: imageUrl.isNotEmpty
-                          ? NetworkImage(imageUrl)
-                          : null,
-                      child: imageUrl.isEmpty
-                          ? const Icon(
-                              Icons.person_rounded,
-                              size: 48,
-                              color: Color(0xFFA78BFA),
+                      // ================= Avatar =================
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                              blurRadius: 18,
+                              spreadRadius: 2,
                             )
-                          : null,
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // ================= Name =================
-                  Text(
-                    displayName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 21,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // ================= Email =================
-                  Text(
-                    email,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white60,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-
-                  // ================= Guest Notice =================
-                  if (isGuest)
-                    Container(
-                      margin: const EdgeInsets.only(top: 14),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.3),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 48,
+                          backgroundColor: const Color(0xFF1E163B),
+                          backgroundImage: imageUrl.isNotEmpty
+                              ? NetworkImage(imageUrl)
+                              : null,
+                          child: imageUrl.isEmpty
+                              ? const Icon(
+                                  Icons.person_rounded,
+                                  size: 48,
+                                  color: Color(0xFFA78BFA),
+                                )
+                              : null,
                         ),
                       ),
-                      child: const Text(
-                        "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
-                        style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+
+                      const SizedBox(height: 14),
+
+                      // ================= Name =================
+                      Text(
+                        displayName,
                         textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 21,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
 
-                  const SizedBox(height: 22),
+                      const SizedBox(height: 4),
 
-                  // ================= Stat Cards =================
-                  InkWell(
-                    onTap: isGuest
-                        ? () => Fluttertoast.showToast(
-                              msg: "يجب تسجيل الدخول لمراجعة الإجابات",
-                            )
-                        : () => Navigator.push(
-                              context,
-                              AppRoute.fadeSlide(
-                                ReviewQuestionsPage(showCorrect: true),
-                              ),
-                            ),
-                    borderRadius: BorderRadius.circular(20),
-                    child: _buildGlassStatCard(
-                      title: "إجابات صحيحة",
-                      value: correct,
-                      icon: Icons.check_circle_rounded,
-                      color: const Color(0xFF10B981),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  InkWell(
-                    onTap: isGuest
-                        ? () => Fluttertoast.showToast(
-                              msg: "يجب تسجيل الدخول لمراجعة الإجابات",
-                            )
-                        : () => Navigator.push(
-                              context,
-                              AppRoute.fadeSlide(
-                                ReviewQuestionsPage(showCorrect: false),
-                              ),
-                            ),
-                    borderRadius: BorderRadius.circular(20),
-                    child: _buildGlassStatCard(
-                      title: "إجابات خاطئة",
-                      value: wrong,
-                      icon: Icons.cancel_rounded,
-                      color: const Color(0xFFEF4444),
-                    ),
-                  ), 
-
-                  const SizedBox(height: 24),
-
-                  // ================= Admin Dashboard Button (Only for Admin) =================
-                  if (!isGuest && _auth.currentUser?.email?.toLowerCase() == kAdminEmail) ...[
-                    _gradientActionButton(
-                      icon: Icons.admin_panel_settings_rounded,
-                      title: "لوحة تحكم المسؤول",
-                      gradient: const [Color(0xFFD97706), Color(0xFFF59E0B)],
-                      onPressed: () => Navigator.push(
-                        context,
-                        AppRoute.fadeSlide(const AdminDashboardPage()),
+                      // ================= Email =================
+                      Text(
+                        email,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white60,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
 
-                  // ================= Navigation Action Buttons =================
-                  _gradientActionButton(
-                    icon: Icons.bar_chart_rounded,
-                    title: "لوحة المتصدرين",
-                    gradient: const [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
-                    onPressed: () => Navigator.push(
-                      context,
-                      AppRoute.fadeSlide(const StatisticsPage()),
-                    ),
-                  ),
+                      // ================= Guest Notice =================
+                      if (isGuest)
+                        Container(
+                          margin: const EdgeInsets.only(top: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.amber.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Text(
+                            "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
+                            style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
 
-                  const SizedBox(height: 14),
+                      const SizedBox(height: 22),
 
-                  _gradientActionButton(
-                    icon: Icons.psychology_rounded,
-                    title: "آخر تقرير معرفي",
-                    gradient: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                    onPressed: () => isGuest
-                        ? Fluttertoast.showToast(
-                            msg: "يجب تسجيل الدخول لتظهر التقارير",
-                          )
-                        : Navigator.push(
+                      // ================= Stat Cards =================
+                      InkWell(
+                        onTap: isGuest
+                            ? () => Fluttertoast.showToast(
+                                  msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                                )
+                            : () => Navigator.push(
+                                  context,
+                                  AppRoute.fadeSlide(
+                                    ReviewQuestionsPage(showCorrect: true),
+                                  ),
+                                ),
+                        borderRadius: BorderRadius.circular(20),
+                        child: _buildGlassStatCard(
+                          title: "إجابات صحيحة",
+                          value: correct,
+                          icon: Icons.check_circle_rounded,
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      InkWell(
+                        onTap: isGuest
+                            ? () => Fluttertoast.showToast(
+                                  msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                                )
+                            : () => Navigator.push(
+                                  context,
+                                  AppRoute.fadeSlide(
+                                    ReviewQuestionsPage(showCorrect: false),
+                                  ),
+                                ),
+                        borderRadius: BorderRadius.circular(20),
+                        child: _buildGlassStatCard(
+                          title: "إجابات خاطئة",
+                          value: wrong,
+                          icon: Icons.cancel_rounded,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // ================= Admin Dashboard Button (Only for Admin) =================
+                      if (!isGuest && _auth.currentUser?.email?.toLowerCase() == kAdminEmail) ...[
+                        _gradientActionButton(
+                          icon: Icons.admin_panel_settings_rounded,
+                          title: "لوحة تحكم المسؤول",
+                          gradient: const [Color(0xFFD97706), Color(0xFFF59E0B)],
+                          onPressed: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) => LastAnalysisPage(),
-                            ),
+                            AppRoute.fadeSlide(const AdminDashboardPage()),
                           ),
-                  ),
+                        ),
+                        const SizedBox(height: 14),
+                      ],
 
-                  const SizedBox(height: 14),
-
-                  _gradientActionButton(
-                    icon: Icons.auto_graph_rounded,
-                    title: "التقرير المعرفي الشامل",
-                    gradient: const [Color(0xFF2563EB), Color(0xFF8B5CF6)],
-                    onPressed: () {
-                      if (isGuest) {
-                        Fluttertoast.showToast(
-                          msg: "يجب تسجيل الدخول لتظهر التقارير",
-                        );
-                      } else {
-                        final reports = ReportHistoryService.getAllReports();
-                        final _ = GlobalCognitiveAnalyzer.analyzeAll(reports);
-                        Navigator.push(
+                      // ================= Navigation Action Buttons =================
+                      _gradientActionButton(
+                        icon: Icons.bar_chart_rounded,
+                        title: "لوحة المتصدرين",
+                        gradient: const [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
+                        onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => GlobalReportPage(),
-                          ),
-                        );
-                      }
-                    },
+                          AppRoute.fadeSlide(const StatisticsPage()),
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      _gradientActionButton(
+                        icon: Icons.psychology_rounded,
+                        title: "آخر تقرير معرفي",
+                        gradient: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                        onPressed: () => isGuest
+                            ? Fluttertoast.showToast(
+                                msg: "يجب تسجيل الدخول لتظهر التقارير",
+                              )
+                            : Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => LastAnalysisPage(),
+                                ),
+                              ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      _gradientActionButton(
+                        icon: Icons.auto_graph_rounded,
+                        title: "التقرير المعرفي الشامل",
+                        gradient: const [Color(0xFF2563EB), Color(0xFF8B5CF6)],
+                        onPressed: () {
+                          if (isGuest) {
+                            Fluttertoast.showToast(
+                              msg: "يجب تسجيل الدخول لتظهر التقارير",
+                            );
+                          } else {
+                            final reports = ReportHistoryService.getAllReports();
+                            final _ = GlobalCognitiveAnalyzer.analyzeAll(reports);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => GlobalReportPage(),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // ================= Auth Action =================
+                      if (isGuest)
+                        _buildGoogleButton(
+                          text: "تسجيل الدخول باستخدام Google",
+                          onTap: isGoogleLoading ? () {} : _handleGoogleSignIn,
+                        ),
+
+                      if (!isGuest)
+                        _buildLogoutButton(
+                          onTap: () => showDeleteConfirmDialog(context: context),
+                        ),
+
+                      const SizedBox(height: 20),
+                    ],
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // ================= Auth Action =================
-                  if (isGuest)
-                    _buildGoogleButton(
-                      text: "تسجيل الدخول باستخدام Google",
-                      onTap: () async {
-                        final user = await authService.signInWithGoogle();
-                        if (user != null) {
-                          setState(() => isLoading = true);
-                          await saveGoogleUser(user);
-                          await _loadUserData();
-                        }
-                      },
-                    ),
-
-                  if (!isGuest)
-                    _buildLogoutButton(
-                      onTap: () => showDeleteConfirmDialog(context: context),
-                    ),
-
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+
+          // ================= Full Screen Loading Overlay =================
+          if (isGoogleLoading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 28,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E163B),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                        blurRadius: 20,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 42,
+                        height: 42,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: Color(0xFFA78BFA),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        googleLoadingStatus,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

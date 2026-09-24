@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../model/cognitive_report.dart';
 
 class CloudLastAnalysisService {
@@ -17,7 +18,7 @@ class CloudLastAnalysisService {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    print(" تم حفظ تحليل آخر اختبار");
+    if (kDebugMode) debugPrint("تم حفظ تحليل آخر اختبار");
   }
 
   static Future<CognitiveReport?> getLastAnalysis() async {

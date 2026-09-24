@@ -86,7 +86,11 @@ class _SplashPageState extends State<SplashPage> {
                   ],
                 ),
                 child: const CircleAvatar(
-                  backgroundImage: AssetImage('asset/images/quiz2.jpg'),
+                  backgroundImage: ResizeImage(
+                    AssetImage('asset/images/quiz2.jpg'),
+                    width: 300,
+                    height: 300,
+                  ),
                   radius: 75,
                 ),
               ),

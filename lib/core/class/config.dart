@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 // ================= Internet Connection Check =================
 // التحقق من توفر اتصال بالإنترنت عبر اختبار الوصول إلى خادم خارجي
@@ -8,16 +9,16 @@ Future<bool> checkIConnection() async {
 
     // التحقق من نجاح الاتصال واستلام عنوان IP صالح
     if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-      print('connected');
+      if (kDebugMode) debugPrint('connected');
       return true;
     } else {
-      print('not connected');
+      if (kDebugMode) debugPrint('not connected');
       return false;
     }
   }
   // معالجة فشل الاتصال أو عدم توفر الشبكة
   on SocketException catch (_) {
-    print('not connected');
+    if (kDebugMode) debugPrint('not connected');
     return false;
   }
 }
