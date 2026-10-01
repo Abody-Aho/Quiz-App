@@ -372,7 +372,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             );
                           } else {
                             final reports = ReportHistoryService.getAllReports();
-                            final _ = GlobalCognitiveAnalyzer.analyzeAll(reports);
+                            final currentLang = LocaleController.instance.currentLocale.languageCode;
+                            final _ = GlobalCognitiveAnalyzer.analyzeAll(reports, langCode: currentLang);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -480,12 +481,20 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               const Icon(Icons.language_rounded, color: Color(0xFFA78BFA), size: 22),
               const SizedBox(width: 10),
-              Text(
-                context.tr('change_language'),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Directionality.of(context) == TextDirection.rtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Text(
+                    context.tr('change_language'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -529,12 +538,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white70,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 13,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -578,15 +590,22 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.white,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Directionality.of(context) == TextDirection.rtl
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             value.toString(),
             style: TextStyle(
@@ -631,12 +650,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           icon: Icon(icon, color: Colors.white, size: 22),
-          label: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -670,12 +692,17 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Image.asset("asset/images/google2.png", height: 22),
             const SizedBox(width: 12),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
               ),
             ),
           ],
