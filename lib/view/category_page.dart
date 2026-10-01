@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:exam/view/profile_page.dart';
 import 'package:exam/widget/custom_text_fiele.dart';
 import 'package:flutter/material.dart';
@@ -109,7 +110,7 @@ class _CategoryPageState extends State<CategoryPage> {
         return null;
       }
     } else {
-      if (!dialogContext.mounted) return null;
+      if (!mounted) return null;
       _showPermissionDeniedDialog(dialogContext);
       return null;
     }
@@ -124,13 +125,13 @@ class _CategoryPageState extends State<CategoryPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.photo_library_rounded, color: Color(0xFFA78BFA)),
-              SizedBox(width: 8),
+              const Icon(Icons.photo_library_rounded, color: Color(0xFFA78BFA)),
+              const SizedBox(width: 8),
               Text(
-                'إذن الوصول للصور',
-                style: TextStyle(
+                ctx.tr('permission_photo_title'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -138,14 +139,14 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
             ],
           ),
-          content: const Text(
-            'لاختيار صورة للفئة، يجب السماح للتطبيق بالوصول إلى معرض الصور. يرجى قبول الإذن من الإعدادات.',
-            style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+          content: Text(
+            ctx.tr('permission_photo_msg'),
+            style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+              child: Text(ctx.tr('cancel'), style: const TextStyle(color: Colors.grey)),
             ),
             Container(
               decoration: BoxDecoration(
@@ -166,9 +167,9 @@ class _CategoryPageState extends State<CategoryPage> {
                   Navigator.pop(ctx);
                   openAppSettings();
                 },
-                child: const Text(
-                  'فتح الإعدادات',
-                  style: TextStyle(
+                child: Text(
+                  ctx.tr('open_settings'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -218,7 +219,7 @@ class _CategoryPageState extends State<CategoryPage> {
   Future<void> saveCategories(List<Category> categories) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> jsonList =
-        categories.map((c) => jsonEncode(c.toMap())).toList();
+    categories.map((c) => jsonEncode(c.toMap())).toList();
     await prefs.setStringList('categories', jsonList);
   }
 
@@ -266,7 +267,7 @@ class _CategoryPageState extends State<CategoryPage> {
           _lastBackPressed = now;
 
           Fluttertoast.showToast(
-            msg: "اضغط مرة أخرى للخروج",
+            msg: context.tr('press_again_exit'),
             gravity: ToastGravity.BOTTOM,
           );
         } else {
@@ -321,11 +322,11 @@ class _CategoryPageState extends State<CategoryPage> {
                           ),
                         ),
                       ),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          "اختر الفئة",
+                          context.tr('select_category'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -333,7 +334,7 @@ class _CategoryPageState extends State<CategoryPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 42), // Balance for drawer button
+                      const SizedBox(width: 42),
                     ],
                   ),
                 ),
@@ -350,7 +351,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         padding: const EdgeInsets.all(18),
                         itemCount: filteredCategories.length,
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
@@ -378,7 +379,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                 boxShadow: [
                                   BoxShadow(
                                     color:
-                                        Colors.black.withValues(alpha: 0.25),
+                                    Colors.black.withValues(alpha: 0.25),
                                     blurRadius: 15,
                                     offset: const Offset(0, 8),
                                   ),
@@ -406,7 +407,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                         ],
                                       ),
                                       child:
-                                          _buildCategoryImage(category.image),
+                                      _buildCategoryImage(category.image),
                                     ),
                                     const SizedBox(height: 12),
 
@@ -506,8 +507,6 @@ class _CategoryPageState extends State<CategoryPage> {
 
   // ================= Difficulty Dialog =================
   void _showDifficultyDialog(BuildContext context, Category category) {
-    final bool isArabic = category.direction == TextDirection.rtl;
-
     showScaleDialog(
       context: context,
       child: Dialog(
@@ -534,7 +533,7 @@ class _CategoryPageState extends State<CategoryPage> {
               const SizedBox(height: 14),
 
               Text(
-                isArabic ? "اختر مستوى الصعوبة" : "Choose Difficulty",
+                context.tr('choose_difficulty'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -556,7 +555,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 child: Text(
-                  "${isArabic ? 'لغة الاختبار' : 'Language'}: ${category.language}",
+                  "${context.tr('exam_language')}: ${category.language}",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.white70,
@@ -568,7 +567,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
               // Difficulty Buttons
               _difficultyButton(
-                title: isArabic ? "سهل" : "Easy",
+                title: context.tr('easy'),
                 color: Colors.white,
                 background: const Color(0xFF10B981), // Emerald Green
                 onTap: () {
@@ -580,7 +579,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: category.language,
                         level:
-                            "Easy: basic and introductory questions suitable for beginners.",
+                        "Easy: basic and introductory questions suitable for beginners.",
                       ),
                     ),
                   );
@@ -588,7 +587,7 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
 
               _difficultyButton(
-                title: isArabic ? "متوسط" : "Medium",
+                title: context.tr('medium'),
                 color: Colors.white,
                 background: const Color(0xFF6C63FF), // Purple
                 onTap: () {
@@ -600,7 +599,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: category.language,
                         level:
-                            "Medium: moderately challenging questions that require solid understanding.",
+                        "Medium: moderately challenging questions that require solid understanding.",
                       ),
                     ),
                   );
@@ -608,7 +607,7 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
 
               _difficultyButton(
-                title: isArabic ? "صعب" : "Hard",
+                title: context.tr('hard'),
                 color: Colors.white,
                 background: const Color(0xFFF59E0B), // Amber
                 onTap: () {
@@ -620,7 +619,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: category.language,
                         level:
-                            "Hard: advanced questions that test deep knowledge and analytical thinking.",
+                        "Hard: advanced questions that test deep knowledge and analytical thinking.",
                       ),
                     ),
                   );
@@ -628,7 +627,7 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
 
               _difficultyButton(
-                title: isArabic ? "صعب جداً" : "Very Hard",
+                title: context.tr('extreme'),
                 color: Colors.white,
                 background: const Color(0xFFEF4444), // Crimson Red
                 onTap: () {
@@ -640,7 +639,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         category: category,
                         language: category.language,
                         level:
-                            "Very Hard: expert-level, complex, and highly analytical questions.",
+                        "Very Hard: expert-level, complex, and highly analytical questions.",
                       ),
                     ),
                   );
@@ -694,7 +693,7 @@ class _CategoryPageState extends State<CategoryPage> {
       child: imagePath.startsWith('asset')
           ? Image.asset(imagePath, height: 60, width: 60, fit: BoxFit.cover)
           : Image.file(File(imagePath),
-              height: 60, width: 60, fit: BoxFit.cover),
+          height: 60, width: 60, fit: BoxFit.cover),
     );
   }
 
@@ -708,7 +707,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
   String? _categoryValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'الحقل مطلوب';
+      return context.tr('required_field');
     }
     return null;
   }
@@ -743,9 +742,9 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text(
-                  'إضافة فئة جديدة',
-                  style: TextStyle(
+                Text(
+                  dialogCtx.tr('add_category'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -761,18 +760,18 @@ class _CategoryPageState extends State<CategoryPage> {
                   children: [
                     const SizedBox(height: 10),
                     CustomTextField(
-                      hintText: 'العنوان',
+                      hintText: dialogCtx.tr('category_title'),
                       titleController: titleController,
                       validator: _categoryValidator,
                       prefixIcon:
-                          const Icon(Icons.title_rounded, color: Colors.black),
+                      const Icon(Icons.title_rounded, color: Colors.black),
                       isEnglish: false,
                       textDirection: TextDirection.rtl,
                       length: 50,
                     ),
                     const SizedBox(height: 15),
                     CustomTextField(
-                      hintText: 'نوع الاسئلة (الوصف أو المواضيع)',
+                      hintText: dialogCtx.tr('category_prompt'),
                       titleController: promptController,
                       validator: _categoryValidator,
                       prefixIcon: const Icon(
@@ -792,9 +791,9 @@ class _CategoryPageState extends State<CategoryPage> {
                           : 'أخرى',
                       dropdownColor: const Color(0xFF231B45),
                       style:
-                          const TextStyle(color: Colors.white, fontSize: 15),
+                      const TextStyle(color: Colors.white, fontSize: 15),
                       decoration: InputDecoration(
-                        labelText: 'لغة الاختبار',
+                        labelText: dialogCtx.tr('exam_language'),
                         labelStyle: const TextStyle(color: Colors.white70),
                         prefixIcon: const Icon(
                           Icons.language_rounded,
@@ -836,7 +835,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     if (selectedLang == 'أخرى') ...[
                       const SizedBox(height: 12),
                       CustomTextField(
-                        hintText: 'أدخل اسم اللغة (مثال: Swahili)',
+                        hintText: dialogCtx.tr('enter_custom_language'),
                         titleController: customLanguageController,
                         validator: _categoryValidator,
                         prefixIcon: const Icon(
@@ -857,25 +856,25 @@ class _CategoryPageState extends State<CategoryPage> {
                         borderRadius: BorderRadius.circular(16),
                         child: selectedImage!.path.startsWith('asset')
                             ? Image.asset(
-                                selectedImage!.path,
-                                height: 80,
-                                width: 80,
-                                fit: BoxFit.cover,
-                              )
+                          selectedImage!.path,
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        )
                             : Image.file(
-                                File(selectedImage!.path),
-                                height: 80,
-                                width: 80,
-                                fit: BoxFit.cover,
-                              ),
+                          File(selectedImage!.path),
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
 
                     TextButton.icon(
                       icon: const Icon(Icons.image_rounded,
                           color: Color(0xFFA78BFA)),
-                      label: const Text(
-                        'اختر صورة للفئة',
-                        style: TextStyle(
+                      label: Text(
+                        dialogCtx.tr('select_image'),
+                        style: const TextStyle(
                           color: Color(0xFFDDD6FE),
                           fontWeight: FontWeight.w600,
                         ),
@@ -899,9 +898,9 @@ class _CategoryPageState extends State<CategoryPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text(
-                  'إلغاء',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                child: Text(
+                  dialogCtx.tr('cancel'),
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
                 ),
               ),
               Container(
@@ -946,9 +945,9 @@ class _CategoryPageState extends State<CategoryPage> {
                       Navigator.pop(dialogCtx);
                     }
                   },
-                  child: const Text(
-                    'حفظ',
-                    style: TextStyle(
+                  child: Text(
+                    dialogCtx.tr('save'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -1003,9 +1002,9 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text(
-                  'تعديل الفئة',
-                  style: TextStyle(
+                Text(
+                  dialogCtx.tr('edit_category'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -1021,19 +1020,19 @@ class _CategoryPageState extends State<CategoryPage> {
                   children: [
                     const SizedBox(height: 10),
                     CustomTextField(
-                      hintText: 'العنوان',
+                      hintText: dialogCtx.tr('category_title'),
                       titleController: titleController,
                       validator: _categoryValidator,
                       prefixIcon:
-                          const Icon(Icons.title_rounded, color: Colors.black),
+                      const Icon(Icons.title_rounded, color: Colors.black),
                       isEnglish: false,
                       textDirection:
-                          getDirectionForLanguage(category.language),
+                      getDirectionForLanguage(category.language),
                       length: 50,
                     ),
                     const SizedBox(height: 15),
                     CustomTextField(
-                      hintText: 'نوع الاسئلة',
+                      hintText: dialogCtx.tr('category_prompt'),
                       titleController: promptController,
                       validator: _categoryValidator,
                       prefixIcon: const Icon(
@@ -1042,7 +1041,7 @@ class _CategoryPageState extends State<CategoryPage> {
                       ),
                       isEnglish: false,
                       textDirection:
-                          getDirectionForLanguage(category.language),
+                      getDirectionForLanguage(category.language),
                       length: 250,
                     ),
                     const SizedBox(height: 15),
@@ -1052,9 +1051,9 @@ class _CategoryPageState extends State<CategoryPage> {
                       initialValue: selectedLang,
                       dropdownColor: const Color(0xFF231B45),
                       style:
-                          const TextStyle(color: Colors.white, fontSize: 15),
+                      const TextStyle(color: Colors.white, fontSize: 15),
                       decoration: InputDecoration(
-                        labelText: 'لغة الاختبار',
+                        labelText: dialogCtx.tr('exam_language'),
                         labelStyle: const TextStyle(color: Colors.white70),
                         prefixIcon: const Icon(
                           Icons.language_rounded,
@@ -1090,7 +1089,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     if (selectedLang == 'أخرى') ...[
                       const SizedBox(height: 12),
                       CustomTextField(
-                        hintText: 'أدخل اسم اللغة (مثال: Swahili)',
+                        hintText: dialogCtx.tr('enter_custom_language'),
                         titleController: customLanguageController,
                         validator: _categoryValidator,
                         prefixIcon: const Icon(
@@ -1110,25 +1109,25 @@ class _CategoryPageState extends State<CategoryPage> {
                         borderRadius: BorderRadius.circular(16),
                         child: selectedImage!.path.startsWith('asset')
                             ? Image.asset(
-                                selectedImage!.path,
-                                height: 80,
-                                width: 80,
-                                fit: BoxFit.cover,
-                              )
+                          selectedImage!.path,
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        )
                             : Image.file(
-                                File(selectedImage!.path),
-                                height: 80,
-                                width: 80,
-                                fit: BoxFit.cover,
-                              ),
+                          File(selectedImage!.path),
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
 
                     TextButton.icon(
                       icon: const Icon(Icons.image_rounded,
                           color: Color(0xFFA78BFA)),
-                      label: const Text(
-                        'تغيير الصورة',
-                        style: TextStyle(
+                      label: Text(
+                        dialogCtx.tr('change_image'),
+                        style: const TextStyle(
                           color: Color(0xFFDDD6FE),
                           fontWeight: FontWeight.w600,
                         ),
@@ -1152,17 +1151,17 @@ class _CategoryPageState extends State<CategoryPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text(
-                  'إلغاء',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                child: Text(
+                  dialogCtx.tr('cancel'),
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
                 ),
               ),
               TextButton.icon(
                 icon: const Icon(Icons.delete_outline_rounded,
                     color: Colors.redAccent, size: 20),
-                label: const Text(
-                  'حذف',
-                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                label: Text(
+                  dialogCtx.tr('delete_category'),
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 16),
                 ),
                 onPressed: () {
                   showDeleteConfirmDialog(
@@ -1217,9 +1216,9 @@ class _CategoryPageState extends State<CategoryPage> {
                       Navigator.pop(dialogCtx);
                     }
                   },
-                  child: const Text(
-                    'تحديث',
-                    style: TextStyle(
+                  child: Text(
+                    dialogCtx.tr('update'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -1247,30 +1246,30 @@ class _CategoryPageState extends State<CategoryPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
-              SizedBox(width: 8),
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              const SizedBox(width: 8),
               Text(
-                'تأكيد الحذف',
-                style: TextStyle(
+                ctx.tr('delete_category'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          content: const Text(
-            'هل أنت متأكد من حذف هذه الفئة؟',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          content: Text(
+            ctx.tr('delete_category_confirm'),
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text(
-                'إلغاء',
-                style: TextStyle(color: Colors.grey),
+              child: Text(
+                ctx.tr('cancel'),
+                style: const TextStyle(color: Colors.grey),
               ),
             ),
             ElevatedButton(
@@ -1284,9 +1283,9 @@ class _CategoryPageState extends State<CategoryPage> {
                 Navigator.pop(ctx);
                 onConfirm();
               },
-              child: const Text(
-                'حذف',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                ctx.tr('delete_category'),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],
@@ -1305,12 +1304,12 @@ class _CategoryPageState extends State<CategoryPage> {
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            builder: (_, _) => const Padding(
-              padding: EdgeInsets.all(8),
+            builder: (_, _) => Padding(
+              padding: const EdgeInsets.all(8),
               child: Text(
-                'أضغط هنا لأضافة فئة جديدة',
+                context.tr('tutorial_add_category'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -1328,12 +1327,12 @@ class _CategoryPageState extends State<CategoryPage> {
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            builder: (_, _) => const Padding(
-              padding: EdgeInsets.all(8),
+            builder: (_, _) => Padding(
+              padding: const EdgeInsets.all(8),
               child: Text(
-                'اضغط مطولًا لتعديل هذه الفئة',
+                context.tr('tutorial_edit_category'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

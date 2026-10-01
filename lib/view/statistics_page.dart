@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -59,19 +60,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.emoji_events_rounded,
                             color: Colors.amberAccent,
                             size: 24,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            "لوحة الصدارة",
-                            style: TextStyle(
+                            context.tr('leaderboard'),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -142,7 +143,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                               ),
                               SizedBox(height: 12),
                               Text(
-                                "لا توجد بيانات متصدرين بعد",
+                                "No leaderboard data yet",
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: 16,

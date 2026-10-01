@@ -1,3 +1,4 @@
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../core/class/route_transitions.dart';
 import '../model/model.dart';
@@ -16,34 +17,6 @@ class _OnboardingViewState extends State<OnboardingView> {
   final PageController _controller = PageController();
   int currentIndex = 0;
 
-  // ================= Onboarding Data =================
-  final List<OnboardItem> items = [
-    OnboardItem(
-      icon: Icons.smart_toy_rounded,
-      title: "اختبارات ذكية",
-      description:
-          "أنشئ أسئلة واختبارات مخصصة باستخدام الذكاء الاصطناعي خلال ثوانٍ معدودة",
-    ),
-    OnboardItem(
-      icon: Icons.category_rounded,
-      title: "اختر المجال واللغة",
-      description:
-          "برمجة، لغات، علوم، تاريخ\nأو أضف مجالك الخاص باللغة التي تفضلها",
-    ),
-    OnboardItem(
-      icon: Icons.psychology_rounded,
-      title: "تعلّم وقيّم مستواك",
-      description:
-          "أجب على الأسئلة واحصل على نتيجتك فورًا مع تحليل معرفي ذكي وشامل",
-    ),
-    OnboardItem(
-      icon: Icons.rocket_launch_rounded,
-      title: "ابدأ رحلتك الآن",
-      description:
-          "اختبارات غير محدودة وتجربة تعليمية تفاعلية ممتازة بين يديك",
-    ),
-  ];
-
   void _goToLogin() {
     Navigator.pushReplacement(
       context,
@@ -54,6 +27,24 @@ class _OnboardingViewState extends State<OnboardingView> {
   // ================= UI =================
   @override
   Widget build(BuildContext context) {
+    final List<OnboardItem> items = [
+      OnboardItem(
+        icon: Icons.smart_toy_rounded,
+        title: context.tr('onboarding_title_1'),
+        description: context.tr('onboarding_desc_1'),
+      ),
+      OnboardItem(
+        icon: Icons.psychology_rounded,
+        title: context.tr('onboarding_title_2'),
+        description: context.tr('onboarding_desc_2'),
+      ),
+      OnboardItem(
+        icon: Icons.rocket_launch_rounded,
+        title: context.tr('onboarding_title_3'),
+        description: context.tr('onboarding_desc_3'),
+      ),
+    ];
+
     final bool isLast = currentIndex == items.length - 1;
 
     return Scaffold(
@@ -86,9 +77,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                     if (!isLast)
                       TextButton(
                         onPressed: _goToLogin,
-                        child: const Text(
-                          "تخطي",
-                          style: TextStyle(
+                        child: Text(
+                          context.tr('skip'),
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -288,7 +279,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            isLast ? "ابدأ الآن" : "التالي",
+                            isLast ? context.tr('get_started') : context.tr('next'),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

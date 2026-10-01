@@ -1,11 +1,13 @@
 import 'package:confetti/confetti.dart'
     show ConfettiController, ConfettiWidget, BlastDirectionality;
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:exam/view/category_page.dart';
 import 'package:exam/view/report_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../core/class/route_transitions.dart';
+import '../core/localization/locale_controller.dart';
 import '../service/cloud_last_analysis_service.dart';
 import '../service/cloud_report_service.dart';
 import '../service/cognitive_analyzer.dart';
@@ -60,9 +62,11 @@ class _ResultPageState extends State<ResultPage> {
       await QuizProgressService.clearProgress();
 
       // Cognitive Analysis
+      final currentLang = LocaleController.instance.currentLocale.languageCode;
       final logs = BehaviorLogger.getSessionLogs();
       final report = CognitiveAnalyzer.analyze(
         logs.isNotEmpty ? logs : [],
+        langCode: currentLang,
       );
       cognitiveReport = report;
 
@@ -85,17 +89,17 @@ class _ResultPageState extends State<ResultPage> {
   double get percentage =>
       widget.total > 0 ? (widget.score / widget.total) * 100 : 0;
 
-  String getScoreTitle() {
-    if (percentage == 100) return "نتيجة ممتازة! 🎉";
-    if (percentage >= 70) return "أداء ممتاز! 👏";
-    if (percentage >= 50) return "أداء جيد 🙂";
-    return "حاول مرة أخرى 💡";
+  String getScoreTitle(BuildContext context) {
+    if (percentage == 100) return context.tr('excellent_result');
+    if (percentage >= 70) return context.tr('great_performance');
+    if (percentage >= 50) return context.tr('good_performance');
+    return context.tr('try_again');
   }
 
-  String getScoreSubtitle() {
-    if (percentage >= 80) return "أحسنت! لديك معرفة جيدة جداً بالمعلومات.";
-    if (percentage >= 50) return "نتيجة طيبة، مع بعض المراجعة ستصبح أفضل!";
-    return "لا تقلق، تكرار الاختبار يساعدك على التعلم والتحسن بسرعة.";
+  String getScoreSubtitle(BuildContext context) {
+    if (percentage >= 80) return context.tr('score_sub_80');
+    if (percentage >= 50) return context.tr('score_sub_50');
+    return context.tr('score_sub_low');
   }
 
   Color getScoreColor() {
@@ -205,7 +209,7 @@ class _ResultPageState extends State<ResultPage> {
 
                           // Title & Subtitle
                           Text(
-                            getScoreTitle(),
+                            getScoreTitle(context),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 26,
@@ -217,7 +221,7 @@ class _ResultPageState extends State<ResultPage> {
                           const SizedBox(height: 8),
 
                           Text(
-                            getScoreSubtitle(),
+                            getScoreSubtitle(context),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 14,
@@ -275,13 +279,13 @@ class _ResultPageState extends State<ResultPage> {
                             children: [
                               _buildStatChip(
                                 icon: Icons.check_circle_rounded,
-                                label: "${widget.score} صحيحة",
+                                label: "${widget.score} ${context.tr('correct')}",
                                 color: const Color(0xFF10B981),
                               ),
                               const SizedBox(width: 12),
                               _buildStatChip(
                                 icon: Icons.cancel_rounded,
-                                label: "$wrongCount خاطئة",
+                                label: "$wrongCount ${context.tr('wrong')}",
                                 color: const Color(0xFFEF4444),
                               ),
                             ],
@@ -314,9 +318,9 @@ class _ResultPageState extends State<ResultPage> {
                                   color: Colors.white,
                                   size: 22,
                                 ),
-                                label: const Text(
-                                  "عرض التقرير المعرفي",
-                                  style: TextStyle(
+                                label: Text(
+                                  context.tr('view_cognitive_report'),
+                                  style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -331,7 +335,7 @@ class _ResultPageState extends State<ResultPage> {
                                 ),
                                 onPressed: () => isGuest
                                     ? Fluttertoast.showToast(
-                                        msg: "يجب تسجيل الدخول لتظهر التقارير",
+                                        msg: context.tr('must_login_reports'),
                                       )
                                     : Navigator.push(
                                         context,
@@ -363,9 +367,9 @@ class _ResultPageState extends State<ResultPage> {
                                   color: Colors.white,
                                   size: 22,
                                 ),
-                                label: const Text(
-                                  "العودة إلى الفئات",
-                                  style: TextStyle(
+                                label: Text(
+                                  context.tr('back_to_categories'),
+                                  style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:exam/view/category_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   // ================= Services & State =================
   final AuthService authService = AuthService();
   bool isLoading = false;
-  String loadingStatus = "جاري تسجيل الدخول...";
+  String loadingStatus = "";
 
   // ================= Google Sign-In =================
   Future<void> _signInWithGoogle() async {
@@ -26,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() {
       isLoading = true;
-      loadingStatus = "جاري الاتصال بحساب Google...";
+      loadingStatus = context.tr('connecting_google');
     });
 
     try {
@@ -36,14 +37,16 @@ class _LoginPageState extends State<LoginPage> {
 
       if (user != null) {
         setState(() {
-          loadingStatus = "جاري حفظ بيانات الحساب...";
+          loadingStatus = context.tr('saving_account');
         });
 
         await saveGoogleUser(user);
 
         if (!mounted) return;
 
-        Fluttertoast.showToast(msg: "أهلاً بك ${user.displayName ?? ''}!");
+        Fluttertoast.showToast(
+          msg: "${context.tr('app_welcome_user')} ${user.displayName ?? ''}!",
+        );
 
         Navigator.pushReplacement(
           context,
@@ -51,13 +54,13 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         // المستخدم قام بإلغاء النافذة
-        Fluttertoast.showToast(msg: "تم إلغاء تسجيل الدخول");
+        Fluttertoast.showToast(msg: context.tr('login_cancelled'));
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("فشل تسجيل الدخول: ${e.toString().split('\n').first}"),
+          content: Text("${context.tr('login_failed')}: ${e.toString().split('\n').first}"),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -180,9 +183,9 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 24),
 
                         // Title
-                        const Text(
-                          "مرحبًا بك",
-                          style: TextStyle(
+                        Text(
+                          context.tr('welcome_title'),
+                          style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -192,10 +195,10 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 10),
 
                         // Subtitle
-                        const Text(
-                          "سجّل الدخول لحفظ تقدمك ومزامنة نتائجك\nأو تابع كضيف",
+                        Text(
+                          context.tr('welcome_sub'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
                             height: 1.5,
@@ -231,9 +234,9 @@ class _LoginPageState extends State<LoginPage> {
                                     height: 22,
                                   ),
                                   const SizedBox(width: 12),
-                                  const Text(
-                                    "تسجيل الدخول باستخدام Google",
-                                    style: TextStyle(
+                                  Text(
+                                    context.tr('google_login'),
+                                    style: const TextStyle(
                                       color: Colors.black87,
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
@@ -273,9 +276,9 @@ class _LoginPageState extends State<LoginPage> {
                                 color: Colors.white70,
                                 size: 20,
                               ),
-                              label: const Text(
-                                "المتابعة كضيف",
-                                style: TextStyle(
+                              label: Text(
+                                context.tr('guest_login'),
+                                style: const TextStyle(
                                   fontSize: 15,
                                   color: Colors.white70,
                                   fontWeight: FontWeight.bold,

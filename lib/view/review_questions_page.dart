@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -13,12 +14,12 @@ class ReviewQuestionsPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF0F0C20),
+      return Scaffold(
+        backgroundColor: const Color(0xFF0F0C20),
         body: Center(
           child: Text(
-            "يجب تسجيل الدخول عبر Google لمراجعة الإجابات",
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            context.tr('must_login_review'),
+            style: const TextStyle(color: Colors.white, fontSize: 16),
           ),
         ),
       );
@@ -85,8 +86,8 @@ class ReviewQuestionsPage extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             showCorrect
-                                ? "الإجابات الصحيحة"
-                                : "الإجابات الخاطئة",
+                                ? context.tr('review_correct')
+                                : context.tr('review_wrong'),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -135,7 +136,7 @@ class ReviewQuestionsPage extends StatelessWidget {
                               ),
                               SizedBox(height: 12),
                               Text(
-                                "حدث خطأ في تحميل البيانات",
+                                "Error loading data",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -189,18 +190,13 @@ class ReviewQuestionsPage extends StatelessWidget {
                               const SizedBox(height: 16),
                               Text(
                                 showCorrect
-                                    ? "لا توجد إجابات صحيحة محفوظة"
-                                    : "لا توجد إجابات خاطئة محفوظة",
+                                    ? context.tr('review_correct')
+                                    : context.tr('review_wrong'),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                "ابدأ اختبارًا جديدًا وستظهر الإجابات هنا",
-                                style: TextStyle(color: Colors.white60),
                               ),
                             ],
                           ),

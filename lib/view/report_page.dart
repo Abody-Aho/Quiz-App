@@ -1,3 +1,4 @@
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -99,10 +100,10 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                           color: Color(0xFFA78BFA),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          "لا يوجد تحليل محفوظ بعد\nقم بحل اختبار أولاً لمشاهدة التقرير",
+                        Text(
+                          context.tr('no_reports_yet'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -153,19 +154,19 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                             ),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.psychology_rounded,
                                 color: Color(0xFFA78BFA),
                                 size: 24,
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
-                                "تحليل آخر اختبار",
-                                style: TextStyle(
+                                context.tr('latest_analysis_title'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -189,26 +190,26 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                       children: [
                         // ===== 1. Overview Card =====
                         _buildGlassCard(
-                          title: "الملخص العام",
+                          title: context.tr('general_summary'),
                           icon: Icons.analytics_rounded,
                           child: Row(
                             children: [
                               _buildStatBox(
-                                label: "الإجابات الصحيحة",
+                                label: context.tr('correct_answers'),
                                 value: "${report.totalCorrect}",
                                 color: const Color(0xFF10B981),
                                 icon: Icons.check_circle_rounded,
                               ),
                               const SizedBox(width: 10),
                               _buildStatBox(
-                                label: "الإجابات الخاطئة",
+                                label: context.tr('wrong_answers'),
                                 value: "${report.totalWrong}",
                                 color: const Color(0xFFEF4444),
                                 icon: Icons.cancel_rounded,
                               ),
                               const SizedBox(width: 10),
                               _buildStatBox(
-                                label: "نسبة الدقة",
+                                label: context.tr('accuracy_rate'),
                                 value: "${report.accuracy.toStringAsFixed(1)}%",
                                 color: const Color(0xFF8B5CF6),
                                 icon: Icons.percent_rounded,
@@ -221,7 +222,7 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
 
                         // ===== 2. Accuracy Pie Chart =====
                         _buildGlassCard(
-                          title: "مؤشر الدقة",
+                          title: context.tr('overall_accuracy_indicator'),
                           icon: Icons.pie_chart_rounded,
                           child: Column(
                             children: [
@@ -262,9 +263,9 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                                             color: Colors.white,
                                           ),
                                         ),
-                                        const Text(
-                                          "نسبة النجاح",
-                                          style: TextStyle(
+                                        Text(
+                                          context.tr('success_rate'),
+                                          style: const TextStyle(
                                             fontSize: 12,
                                             color: Colors.white60,
                                           ),
@@ -278,9 +279,9 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  _buildLegendItem("صحيحة", const Color(0xFF10B981), "${report.accuracy.toStringAsFixed(0)}%"),
+                                  _buildLegendItem(context.tr('correct'), const Color(0xFF10B981), "${report.accuracy.toStringAsFixed(0)}%"),
                                   const SizedBox(width: 20),
-                                  _buildLegendItem("خاطئة", const Color(0xFFEF4444), "${wrongPercentage.toStringAsFixed(0)}%"),
+                                  _buildLegendItem(context.tr('wrong'), const Color(0xFFEF4444), "${wrongPercentage.toStringAsFixed(0)}%"),
                                 ],
                               ),
                             ],
@@ -291,7 +292,7 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
 
                         // ===== 3. Trend Card =====
                         _buildGlassCard(
-                          title: "اتجاه الأداء",
+                          title: context.tr('performance_trend'),
                           icon: Icons.trending_up_rounded,
                           child: Text(
                             report.performanceTrend,
@@ -308,14 +309,14 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                         // ===== 4. Smooth Cumulative Accuracy Line Chart =====
                         if (report.answersFlow.isNotEmpty)
                           _buildGlassCard(
-                            title: "منحنى الدقة التراكمي أثناء الاختبار",
+                            title: context.tr('cumulative_accuracy_curve'),
                             icon: Icons.show_chart_rounded,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "يُظهر تطور نسبة الدقة التراكمية مع تقدم الأسئلة (0% إلى 100%)",
-                                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                                Text(
+                                  context.tr('cumulative_curve_desc'),
+                                  style: const TextStyle(color: Colors.white60, fontSize: 12),
                                 ),
                                 const SizedBox(height: 16),
                                 SizedBox(
@@ -391,7 +392,7 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                         // ===== 5. Category Weakness =====
                         if (report.categoryWeakness.isNotEmpty)
                           _buildGlassCard(
-                            title: "تحليل الضعف حسب الفئة",
+                            title: context.tr('weakness_by_category'),
                             icon: Icons.category_rounded,
                             child: Column(
                               children: report.categoryWeakness.entries.map((e) {
@@ -413,7 +414,7 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
                                             ),
                                           ),
                                           Text(
-                                            "${e.value.toStringAsFixed(0)}% أخطاء",
+                                            "${e.value.toStringAsFixed(0)}% ${context.tr('errors_suffix')}",
                                             style: TextStyle(
                                               color: color,
                                               fontSize: 14,
@@ -443,7 +444,7 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
 
                         // ===== 6. Smart Analysis Summary =====
                         _buildGlassCard(
-                          title: "التحليل الذكي الشامل",
+                          title: context.tr('comprehensive_smart_analysis'),
                           icon: Icons.auto_awesome_rounded,
                           child: Text(
                             report.summary,
@@ -474,46 +475,43 @@ class _LastAnalysisPageState extends State<LastAnalysisPage> {
     required IconData icon,
     required Widget child,
   }) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E163B).withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1.2,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E163B).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: const Color(0xFFA78BFA), size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFFA78BFA), size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            child,
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
       ),
     );
   }

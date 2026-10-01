@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:exam/view/result_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -199,9 +200,7 @@ class _QuestionViewState extends State<QuestionView> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                isArabic
-                                    ? "السؤال $_questionNumber من $totalQuestions"
-                                    : "Question $_questionNumber of $totalQuestions",
+                                "${context.tr('question')} $_questionNumber / $totalQuestions",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 15,
@@ -400,16 +399,16 @@ class _QuestionViewState extends State<QuestionView> {
           borderRadius: BorderRadius.circular(26),
           border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
         ),
-        child: const Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 64, color: Color(0xFFA78BFA)),
-            SizedBox(height: 18),
+            const Icon(Icons.wifi_off_rounded, size: 64, color: Color(0xFFA78BFA)),
+            const SizedBox(height: 18),
             Text(
-              "لا يوجد اتصال بالإنترنت\nولا يوجد اختبار محفوظ لهذا المجال",
+              context.tr('offline_no_quiz'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -471,7 +470,7 @@ class _QuestionViewState extends State<QuestionView> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          isArabic ? "سؤال الاختبار" : "Question Detail",
+                          context.tr('question_detail'),
                           style: const TextStyle(
                             color: Color(0xFFDDD6FE),
                             fontSize: 12,
@@ -545,7 +544,7 @@ class _QuestionViewState extends State<QuestionView> {
                             size: 22,
                           ),
                           label: Text(
-                            isArabic ? "تأكيد الإجابة" : "Confirm Answer",
+                            context.tr('confirm_answer'),
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
@@ -647,8 +646,8 @@ class _QuestionViewState extends State<QuestionView> {
             children: [
               Text(
                 isLast
-                    ? (isArabic ? "مشاهدة النتيجة" : "See Result")
-                    : (isArabic ? "السؤال التالي" : "Next Question"),
+                    ? context.tr('score')
+                    : context.tr('next'),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

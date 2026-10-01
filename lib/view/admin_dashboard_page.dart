@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -19,7 +20,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-  bool _showActiveOnly = false; // Filter active users only (who solved questions)
+  bool _showActiveOnly = false;
 
   @override
   void initState() {
@@ -44,13 +45,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
-              SizedBox(width: 8),
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              const SizedBox(width: 8),
               Text(
-                'حذف حساب مستخدم نهائياً',
-                style: TextStyle(
+                ctx.tr('delete_user_title'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -59,14 +60,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             ],
           ),
           content: Text(
-            'هل أنت متأكد من حذف حساب "$userName" وجميع إحصائياته نهائياً من قاعدة البيانات؟',
+            "${ctx.tr('delete_user_confirm')} ($userName)",
             style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
           ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+              child: Text(ctx.tr('cancel'), style: const TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -100,12 +101,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
                   // Delete main user document
                   await _firestore.collection('users').doc(docId).delete();
-                  Fluttertoast.showToast(msg: "تم حذف حساب المستخدم وجميع بياناته نهائياً");
+                  Fluttertoast.showToast(msg: ctx.tr('delete_user_success'));
                 } catch (e) {
-                  Fluttertoast.showToast(msg: "حدث خطأ أثناء الحذف: $e");
+                  Fluttertoast.showToast(msg: "${ctx.tr('delete_user_error')}: $e");
                 }
               },
-              child: const Text('حذف نهائي', style: TextStyle(color: Colors.white)),
+              child: Text(ctx.tr('delete_permanently'), style: const TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -160,19 +161,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.admin_panel_settings_rounded,
                             color: Color(0xFFFFD700),
                             size: 26,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            "لوحة تحكم المسؤول",
-                            style: TextStyle(
+                            context.tr('admin_dashboard'),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -207,14 +208,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
-                  tabs: const [
+                  tabs: [
                     Tab(
-                      icon: Icon(Icons.analytics_rounded, size: 20),
-                      text: "التحليلات والإحصائيات",
+                      icon: const Icon(Icons.analytics_rounded, size: 20),
+                      text: context.tr('analytics_and_stats'),
                     ),
                     Tab(
-                      icon: Icon(Icons.people_rounded, size: 20),
-                      text: "إدارة المستخدمين",
+                      icon: const Icon(Icons.people_rounded, size: 20),
+                      text: context.tr('user_management'),
                     ),
                   ],
                 ),
@@ -275,14 +276,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             Row(
               children: [
                 _buildAdminStatCard(
-                  title: "المستخدمين",
+                  title: context.tr('total_users'),
                   value: "$totalUsers",
                   icon: Icons.people_rounded,
                   color: const Color(0xFF3B82F6),
                 ),
                 const SizedBox(width: 12),
                 _buildAdminStatCard(
-                  title: "إجمالي الأسئلة",
+                  title: context.tr('total_questions'),
                   value: "$totalQuestions",
                   icon: Icons.quiz_rounded,
                   color: const Color(0xFF8B5CF6),
@@ -293,14 +294,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
             Row(
               children: [
                 _buildAdminStatCard(
-                  title: "الإجابات الصحيحة",
+                  title: context.tr('correct_answers'),
                   value: "$totalCorrect",
                   icon: Icons.check_circle_rounded,
                   color: const Color(0xFF10B981),
                 ),
                 const SizedBox(width: 12),
                 _buildAdminStatCard(
-                  title: "الإجابات الخاطئة",
+                  title: context.tr('wrong_answers'),
                   value: "$totalWrong",
                   icon: Icons.cancel_rounded,
                   color: const Color(0xFFEF4444),
@@ -312,7 +313,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
             // Global Accuracy Chart
             _buildGlassCard(
-              title: "مؤشر الدقة العام للتطبيق",
+              title: context.tr('accuracy_indicator'),
               icon: Icons.pie_chart_rounded,
               child: Column(
                 children: [
@@ -353,9 +354,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                                 color: Colors.white,
                               ),
                             ),
-                            const Text(
-                              "دقة المستخدمين",
-                              style: TextStyle(
+                            Text(
+                              context.tr('user_accuracy'),
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white60,
                               ),
@@ -370,13 +371,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _buildLegendItem(
-                        "صحيحة",
+                        context.tr('correct'),
                         const Color(0xFF10B981),
                         "${globalAccuracy.toStringAsFixed(0)}%",
                       ),
                       const SizedBox(width: 20),
                       _buildLegendItem(
-                        "خاطئة",
+                        context.tr('wrong'),
                         const Color(0xFFEF4444),
                         "${(100 - globalAccuracy).toStringAsFixed(0)}%",
                       ),
@@ -390,17 +391,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
 
             // Top Active Users
             _buildGlassCard(
-              title: "أفضل المستخدمين أداءً",
+              title: context.tr('top_performing_users'),
               icon: Icons.emoji_events_rounded,
               child: docs.isEmpty
-                  ? const Text(
-                      "لا توجد بيانات مستخدمين بعد",
-                      style: TextStyle(color: Colors.white70),
+                  ? Text(
+                      context.tr('no_users_found'),
+                      style: const TextStyle(color: Colors.white70),
                     )
                   : Column(
                       children: docs.take(5).map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final name = data['displayName'] ?? 'مستخدم Google';
+                        final name = data['displayName'] ?? 'Google User';
                         final photo = data['photoURL'] ?? '';
                         final c = data['correctAnswers'] ?? 0;
                         final w = data['wrongAnswers'] ?? 0;
@@ -435,7 +436,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                                 ),
                               ),
                               Text(
-                                "$c صحيحة / $w خاطئة",
+                                "$c ${context.tr('correct')} / $w ${context.tr('wrong')}",
                                 style: const TextStyle(
                                   color: Color(0xFF10B981),
                                   fontSize: 13,
@@ -477,7 +478,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                 controller: _searchController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: "بحث باسم المستخدم أو البريد...",
+                  hintText: context.tr('search_user_hint'),
                   hintStyle: const TextStyle(color: Colors.white54),
                   prefixIcon:
                       const Icon(Icons.search_rounded, color: Colors.white70),
@@ -506,9 +507,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    "تصفية المستخدمين:",
-                    style: TextStyle(
+                  Text(
+                    context.tr('filter_users'),
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -517,7 +518,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                   Row(
                     children: [
                       ChoiceChip(
-                        label: const Text("الكل"),
+                        label: Text(context.tr('all_users')),
                         selected: !_showActiveOnly,
                         selectedColor: const Color(0xFF8B5CF6),
                         backgroundColor: Colors.white.withValues(alpha: 0.1),
@@ -535,7 +536,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                       ),
                       const SizedBox(width: 8),
                       ChoiceChip(
-                        label: const Text("الفعالين فقط"),
+                        label: Text(context.tr('active_users_only')),
                         selected: _showActiveOnly,
                         selectedColor: const Color(0xFF8B5CF6),
                         backgroundColor: Colors.white.withValues(alpha: 0.1),
@@ -591,10 +592,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
               }).toList();
 
               if (filteredDocs.isEmpty) {
-                return const Center(
+                return Center(
                   child: Text(
-                    "لم يتم العثور على مستخدمين مطبقين للشروط",
-                    style: TextStyle(color: Colors.white70, fontSize: 15),
+                    context.tr('no_matching_users'),
+                    style: const TextStyle(color: Colors.white70, fontSize: 15),
                   ),
                 );
               }
@@ -672,7 +673,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                               Row(
                                 children: [
                                   Text(
-                                    "صح: $correct",
+                                    "${context.tr('correct')}: $correct",
                                     style: const TextStyle(
                                       color: Color(0xFF10B981),
                                       fontSize: 12,
@@ -681,7 +682,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
                                   ),
                                   const SizedBox(width: 10),
                                   Text(
-                                    "خطأ: $wrong",
+                                    "${context.tr('wrong')}: $wrong",
                                     style: const TextStyle(
                                       color: Color(0xFFEF4444),
                                       fontSize: 12,
@@ -803,46 +804,43 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     required IconData icon,
     required Widget child,
   }) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E163B).withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1.2,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E163B).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: const Color(0xFFFFD700), size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFFFFD700), size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            child,
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
       ),
     );
   }

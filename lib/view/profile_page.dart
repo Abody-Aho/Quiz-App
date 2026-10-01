@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:exam/core/localization/app_localizations.dart';
+import 'package:exam/core/localization/locale_controller.dart';
 import 'package:exam/view/report_page.dart';
 import 'package:exam/view/review_questions_page.dart';
 import 'package:exam/view/statistics_page.dart';
@@ -38,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   bool isLoading = true;
   bool isGoogleLoading = false;
-  String googleLoadingStatus = "جاري الاتصال بحساب Google...";
+  String googleLoadingStatus = "";
 
   @override
   void initState() {
@@ -78,8 +80,8 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user == null) {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        displayName = "زائر التطبيق";
-        email = "مستخدم ضيف";
+        displayName = context.tr('guest_user');
+        email = context.tr('guest_email');
         imageUrl = "";
         correct = prefs.getInt('correct') ?? 0;
         wrong = prefs.getInt('wrong') ?? 0;
@@ -115,7 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     setState(() {
       isGoogleLoading = true;
-      googleLoadingStatus = "جاري الاتصال بحساب Google...";
+      googleLoadingStatus = context.tr('connecting_google');
     });
 
     try {
@@ -125,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (user != null) {
         setState(() {
-          googleLoadingStatus = "جاري حفظ بيانات الحساب ومزامنة النتائج...";
+          googleLoadingStatus = context.tr('saving_account');
         });
 
         await saveGoogleUser(user);
@@ -134,14 +136,14 @@ class _ProfilePageState extends State<ProfilePage> {
         if (!mounted) return;
 
         Fluttertoast.showToast(
-          msg: "أهلاً بك ${user.displayName ?? ''}!",
+          msg: "${context.tr('app_welcome_user')} ${user.displayName ?? ''}!",
         );
       } else {
-        Fluttertoast.showToast(msg: "تم إلغاء تسجيل الدخول");
+        Fluttertoast.showToast(msg: context.tr('login_cancelled'));
       }
     } catch (e) {
       if (!mounted) return;
-      Fluttertoast.showToast(msg: "تعذر تسجيل الدخول، يرجى المحاولة لاحقاً");
+      Fluttertoast.showToast(msg: context.tr('login_failed'));
     } finally {
       if (mounted) {
         setState(() {
@@ -255,9 +257,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               color: Colors.amber.withValues(alpha: 0.3),
                             ),
                           ),
-                          child: const Text(
-                            "هذه الإحصائيات محفوظة محليًا على الجهاز\nسجّل الدخول لحفظها على حسابك",
-                            style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+                          child: Text(
+                            context.tr('guest_notice'),
+                            style: const TextStyle(color: Colors.amberAccent, fontSize: 12),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -268,7 +270,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       InkWell(
                         onTap: isGuest
                             ? () => Fluttertoast.showToast(
-                                  msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                                  msg: context.tr('must_login_review'),
                                 )
                             : () => Navigator.push(
                                   context,
@@ -278,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                         borderRadius: BorderRadius.circular(20),
                         child: _buildGlassStatCard(
-                          title: "إجابات صحيحة",
+                          title: context.tr('correct_answers'),
                           value: correct,
                           icon: Icons.check_circle_rounded,
                           color: const Color(0xFF10B981),
@@ -290,7 +292,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       InkWell(
                         onTap: isGuest
                             ? () => Fluttertoast.showToast(
-                                  msg: "يجب تسجيل الدخول لمراجعة الإجابات",
+                                  msg: context.tr('must_login_review'),
                                 )
                             : () => Navigator.push(
                                   context,
@@ -300,12 +302,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                         borderRadius: BorderRadius.circular(20),
                         child: _buildGlassStatCard(
-                          title: "إجابات خاطئة",
+                          title: context.tr('wrong_answers'),
                           value: wrong,
                           icon: Icons.cancel_rounded,
                           color: const Color(0xFFEF4444),
                         ),
                       ),
+
+                      const SizedBox(height: 20),
+
+                      // ================= Language Switcher Card =================
+                      _buildLanguageSelectorCard(context),
 
                       const SizedBox(height: 24),
 
@@ -313,7 +320,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       if (!isGuest && _auth.currentUser?.email?.toLowerCase() == kAdminEmail) ...[
                         _gradientActionButton(
                           icon: Icons.admin_panel_settings_rounded,
-                          title: "لوحة تحكم المسؤول",
+                          title: context.tr('admin_dashboard'),
                           gradient: const [Color(0xFFD97706), Color(0xFFF59E0B)],
                           onPressed: () => Navigator.push(
                             context,
@@ -326,7 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       // ================= Navigation Action Buttons =================
                       _gradientActionButton(
                         icon: Icons.bar_chart_rounded,
-                        title: "لوحة المتصدرين",
+                        title: context.tr('leaderboard'),
                         gradient: const [Color(0xFF6C63FF), Color(0xFF8B5CF6)],
                         onPressed: () => Navigator.push(
                           context,
@@ -338,11 +345,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       _gradientActionButton(
                         icon: Icons.psychology_rounded,
-                        title: "آخر تقرير معرفي",
+                        title: context.tr('last_cognitive_report'),
                         gradient: const [Color(0xFF8B5CF6), Color(0xFFEC4899)],
                         onPressed: () => isGuest
                             ? Fluttertoast.showToast(
-                                msg: "يجب تسجيل الدخول لتظهر التقارير",
+                                msg: context.tr('must_login_reports'),
                               )
                             : Navigator.push(
                                 context,
@@ -356,12 +363,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       _gradientActionButton(
                         icon: Icons.auto_graph_rounded,
-                        title: "التقرير المعرفي الشامل",
+                        title: context.tr('full_cognitive_report'),
                         gradient: const [Color(0xFF2563EB), Color(0xFF8B5CF6)],
                         onPressed: () {
                           if (isGuest) {
                             Fluttertoast.showToast(
-                              msg: "يجب تسجيل الدخول لتظهر التقارير",
+                              msg: context.tr('must_login_reports'),
                             );
                           } else {
                             final reports = ReportHistoryService.getAllReports();
@@ -381,7 +388,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       // ================= Auth Action =================
                       if (isGuest)
                         _buildGoogleButton(
-                          text: "تسجيل الدخول باستخدام Google",
+                          text: context.tr('google_login'),
                           onTap: isGoogleLoading ? () {} : _handleGoogleSignIn,
                         ),
 
@@ -452,6 +459,89 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // ================= Widgets =================
+
+  Widget _buildLanguageSelectorCard(BuildContext context) {
+    final currentLang = LocaleController.instance.currentLocale.languageCode;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E163B).withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.language_rounded, color: Color(0xFFA78BFA), size: 22),
+              const SizedBox(width: 10),
+              Text(
+                context.tr('change_language'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildLangChip('ar', context.tr('arabic'), currentLang),
+              const SizedBox(width: 8),
+              _buildLangChip('en', context.tr('english'), currentLang),
+              const SizedBox(width: 8),
+              _buildLangChip('es', context.tr('spanish'), currentLang),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLangChip(String code, String label, String currentLang) {
+    final isSelected = currentLang == code;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          LocaleController.instance.changeLocale(Locale(code));
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF8B5CF6)
+                : Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFFA78BFA)
+                  : Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white70,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildGlassStatCard({
     required String title,
@@ -614,14 +704,14 @@ class _ProfilePageState extends State<ProfilePage> {
             )
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 10),
+            const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
             Text(
-              "تسجيل الخروج",
-              style: TextStyle(
+              context.tr('logout'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -644,27 +734,27 @@ class _ProfilePageState extends State<ProfilePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.logout_rounded, color: Colors.redAccent),
-              SizedBox(width: 8),
+              const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              const SizedBox(width: 8),
               Text(
-                'تسجيل خروج',
-                style: TextStyle(
+                context.tr('logout_confirm_title'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          content: const Text(
-            'هل أنت متأكد من تسجيل الخروج؟',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          content: Text(
+            context.tr('logout_confirm_msg'),
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+              child: Text(context.tr('cancel'), style: const TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -682,7 +772,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('نعم', style: TextStyle(color: Colors.white)),
+              child: Text(context.tr('yes'), style: const TextStyle(color: Colors.white)),
             ),
           ],
         );

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -98,9 +99,9 @@ class _SplashPageState extends State<SplashPage> {
               const SizedBox(height: 28),
 
               // Title
-              const Text(
-                "منصة الاختبارات الذكية",
-                style: TextStyle(
+              Text(
+                context.tr('app_title'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -111,9 +112,9 @@ class _SplashPageState extends State<SplashPage> {
               const SizedBox(height: 8),
 
               // Subtitle
-              const Text(
-                "اختبارات متطورة مدعومة بالذكاء الاصطناعي",
-                style: TextStyle(
+              Text(
+                context.tr('app_subtitle'),
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,

@@ -1,6 +1,8 @@
+import 'package:exam/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import '../core/localization/locale_controller.dart';
 import '../model/cognitive_report.dart';
 import '../service/cloud_report_service.dart';
 import '../service/global_cognitive_analyzer.dart';
@@ -28,7 +30,8 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
       return null;
     }
 
-    return GlobalCognitiveAnalyzer.analyzeAll(reports);
+    final currentLang = LocaleController.instance.currentLocale.languageCode;
+    return GlobalCognitiveAnalyzer.analyzeAll(reports, langCode: currentLang);
   }
 
   Color _getWeaknessColor(double value) {
@@ -110,10 +113,10 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                           color: Color(0xFFA78BFA),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          "لا توجد تقارير محفوظة بعد\nقم بحل بعض الاختبارات أولاً لاستخراج التقرير الشامل",
+                        Text(
+                          context.tr('no_reports_yet'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -164,19 +167,19 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                             ),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.auto_graph_rounded,
                                 color: Color(0xFFA78BFA),
                                 size: 24,
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
-                                "التقرير المعرفي الشامل",
-                                style: TextStyle(
+                                context.tr('global_cognitive_report'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -200,26 +203,26 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                       children: [
                         // ===== 1. Overview Card =====
                         _buildGlassCard(
-                          title: "الملخص العام لكل الاختبارات",
+                          title: context.tr('overall_summary_all_quizzes'),
                           icon: Icons.analytics_rounded,
                           child: Row(
                             children: [
                               _buildStatBox(
-                                label: "إجمالي الصحيحة",
+                                label: context.tr('correct_answers'),
                                 value: "${report.totalCorrect}",
                                 color: const Color(0xFF10B981),
                                 icon: Icons.check_circle_rounded,
                               ),
                               const SizedBox(width: 10),
                               _buildStatBox(
-                                label: "إجمالي الخاطئة",
+                                label: context.tr('wrong_answers'),
                                 value: "${report.totalWrong}",
                                 color: const Color(0xFFEF4444),
                                 icon: Icons.cancel_rounded,
                               ),
                               const SizedBox(width: 10),
                               _buildStatBox(
-                                label: "الدقة العامة",
+                                label: context.tr('overall_accuracy'),
                                 value: "${report.accuracy.toStringAsFixed(1)}%",
                                 color: const Color(0xFF8B5CF6),
                                 icon: Icons.percent_rounded,
@@ -232,7 +235,7 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
 
                         // ===== 2. Accuracy Pie Chart =====
                         _buildGlassCard(
-                          title: "مؤشر الدقة العام",
+                          title: context.tr('overall_accuracy_indicator'),
                           icon: Icons.pie_chart_rounded,
                           child: Column(
                             children: [
@@ -273,9 +276,9 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                                             color: Colors.white,
                                           ),
                                         ),
-                                        const Text(
-                                          "الدقة الإجمالية",
-                                          style: TextStyle(
+                                        Text(
+                                          context.tr('overall_accuracy'),
+                                          style: const TextStyle(
                                             fontSize: 12,
                                             color: Colors.white60,
                                           ),
@@ -289,9 +292,9 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  _buildLegendItem("إجابات صحيحة", const Color(0xFF10B981), "${report.accuracy.toStringAsFixed(0)}%"),
+                                  _buildLegendItem(context.tr('correct'), const Color(0xFF10B981), "${report.accuracy.toStringAsFixed(0)}%"),
                                   const SizedBox(width: 20),
-                                  _buildLegendItem("إجابات خاطئة", const Color(0xFFEF4444), "${wrongPercentage.toStringAsFixed(0)}%"),
+                                  _buildLegendItem(context.tr('wrong'), const Color(0xFFEF4444), "${wrongPercentage.toStringAsFixed(0)}%"),
                                 ],
                               ),
                             ],
@@ -302,7 +305,7 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
 
                         // ===== 3. Trend Card =====
                         _buildGlassCard(
-                          title: "الاتجاه العام للأداء",
+                          title: context.tr('overall_performance_trend'),
                           icon: Icons.trending_up_rounded,
                           child: Text(
                             report.performanceTrend,
@@ -319,14 +322,14 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                         // ===== 4. Cumulative Line Chart =====
                         if (report.answersFlow.isNotEmpty)
                           _buildGlassCard(
-                            title: "منحنى الأداء التراكمي الشامل",
+                            title: context.tr('cumulative_performance_curve'),
                             icon: Icons.show_chart_rounded,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "تطور نسبة الدقة التراكمية عبر كافة الأسئلة والاختبارات (0% إلى 100%)",
-                                  style: TextStyle(color: Colors.white60, fontSize: 12),
+                                Text(
+                                  context.tr('cumulative_curve_desc_all'),
+                                  style: const TextStyle(color: Colors.white60, fontSize: 12),
                                 ),
                                 const SizedBox(height: 16),
                                 SizedBox(
@@ -402,7 +405,7 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                         // ===== 5. Category Weakness =====
                         if (report.categoryWeakness.isNotEmpty)
                           _buildGlassCard(
-                            title: "الضعف حسب الفئات (تراكمي)",
+                            title: context.tr('category_weakness_cumulative'),
                             icon: Icons.category_rounded,
                             child: Column(
                               children: report.categoryWeakness.entries.map((e) {
@@ -424,7 +427,7 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
                                             ),
                                           ),
                                           Text(
-                                            "${e.value.toStringAsFixed(0)}% أخطاء",
+                                            "${e.value.toStringAsFixed(0)}% ${context.tr('errors_suffix')}",
                                             style: TextStyle(
                                               color: color,
                                               fontSize: 14,
@@ -454,7 +457,7 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
 
                         // ===== 6. AI Smart Summary =====
                         _buildGlassCard(
-                          title: "التحليل الذكي الشامل",
+                          title: context.tr('comprehensive_smart_analysis'),
                           icon: Icons.auto_awesome_rounded,
                           child: Text(
                             report.summary,
@@ -485,46 +488,43 @@ class _GlobalReportPageState extends State<GlobalReportPage> {
     required IconData icon,
     required Widget child,
   }) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E163B).withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1.2,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E163B).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: const Color(0xFFA78BFA), size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFFA78BFA), size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            child,
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
       ),
     );
   }
