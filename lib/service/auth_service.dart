@@ -5,7 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // معرف العميل الخاص بوظيفة Web Client ID من الفايربيز
+  // Web Client ID from Firebase Console
   static const String _webClientId =
       '776332381264-q04sv4v65thtmmca4gp7upfupf8lvpgt.apps.googleusercontent.com';
 
@@ -14,18 +14,23 @@ class AuthService {
     serverClientId: _webClientId,
   );
 
-  // هل المستخدم ضيف
   bool get isGuest => _auth.currentUser == null;
 
-  // تسجيل الدخول باستخدام Google
   Future<User?> signInWithGoogle() async {
     try {
-      // تفريغ الجلسة السابقة لضمان ظهور شاشة الحسابات
       await _googleSignIn.signOut().catchError((_) => null);
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      GoogleSignInAccount? googleUser;
+      try {
+        googleUser = await _googleSignIn.signIn();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Google Sign-In with serverClientId failed, trying fallback: $e');
+        }
+        final fallbackSignIn = GoogleSignIn(scopes: ['email']);
+        googleUser = await fallbackSignIn.signIn();
+      }
 
-      // المستخدم ألغى خيار الحسابات
       if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth =
@@ -48,7 +53,6 @@ class AuthService {
     }
   }
 
-  // تسجيل الخروج
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();

@@ -80,8 +80,6 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user == null) {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        displayName = context.tr('guest_user');
-        email = context.tr('guest_email');
         imageUrl = "";
         correct = prefs.getInt('correct') ?? 0;
         wrong = prefs.getInt('wrong') ?? 0;
@@ -158,6 +156,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final bool isGuest = _auth.currentUser == null;
 
+    final String effectiveName = isGuest ? context.tr('guest_user') : displayName;
+    final String effectiveEmail = isGuest ? context.tr('guest_email') : email;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -220,7 +221,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // ================= Name =================
                       Text(
-                        displayName,
+                        effectiveName,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 21,
@@ -233,7 +234,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // ================= Email =================
                       Text(
-                        email,
+                        effectiveEmail,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 14,
