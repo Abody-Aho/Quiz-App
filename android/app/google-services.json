@@ -7,6 +7,45 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:776332381264:android:6b5659decfbedea1d8d555",
+        "android_client_info": {
+          "package_name": "com.abdalwaly.quizai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "776332381264-q04sv4v65thtmmca4gp7upfupf8lvpgt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpehxbQhWYfgkX2QuRG7SSsDIQRsZ-Bek"
+        },
+        {
+          "current_key": "AIzaSyA7ICJfE-dhCfjOBel7ZSdp8bqT_7W8FeM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "776332381264-q04sv4v65thtmmca4gp7upfupf8lvpgt.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "776332381264-j6mfb60mut3oikj4ksvtgg6ccqubmr1n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flutterfire"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:776332381264:android:ee72c7b32d975c39d8d555",
         "android_client_info": {
           "package_name": "com.example.exam"
@@ -27,6 +66,9 @@
         }
       ],
       "api_key": [
+        {
+          "current_key": "AIzaSyCpehxbQhWYfgkX2QuRG7SSsDIQRsZ-Bek"
+        },
         {
           "current_key": "AIzaSyA7ICJfE-dhCfjOBel7ZSdp8bqT_7W8FeM"
         }
@@ -72,6 +114,9 @@
       ],
       "api_key": [
         {
+          "current_key": "AIzaSyCpehxbQhWYfgkX2QuRG7SSsDIQRsZ-Bek"
+        },
+        {
           "current_key": "AIzaSyA7ICJfE-dhCfjOBel7ZSdp8bqT_7W8FeM"
         }
       ],
@@ -102,7 +147,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "776332381264-ot13mr56vjp02mfdbgbqjhe3t14ceg7k.apps.googleusercontent.com",
+          "client_id": "776332381264-h8819cocnbfi4bajijnioapt1agu7hr3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.quizapp.exam",
@@ -115,6 +160,9 @@
         }
       ],
       "api_key": [
+        {
+          "current_key": "AIzaSyCpehxbQhWYfgkX2QuRG7SSsDIQRsZ-Bek"
+        },
         {
           "current_key": "AIzaSyA7ICJfE-dhCfjOBel7ZSdp8bqT_7W8FeM"
         }

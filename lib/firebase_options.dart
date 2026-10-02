@@ -51,13 +51,12 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA7ICJfE-dhCfjOBel7ZSdp8bqT_7W8FeM',
-    appId: '1:776332381264:android:c288e01cb8f712a9d8d555',
+    apiKey: 'AIzaSyCpehxbQhWYfgkX2QuRG7SSsDIQRsZ-Bek',
+    appId: '1:776332381264:android:6b5659decfbedea1d8d555',
     messagingSenderId: '776332381264',
     projectId: 'flutterfire-57d9b',
     storageBucket: 'flutterfire-57d9b.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDgN8Brflc44ENME4j9Z_gmDpuQJ5paZUg',
     appId: '1:776332381264:ios:48e0a5be6ef4b3c4d8d555',
@@ -66,7 +65,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'flutterfire-57d9b.firebasestorage.app',
     androidClientId: '776332381264-6826qo6clcnf6ej8730f551jok6om8gs.apps.googleusercontent.com',
     iosClientId: '776332381264-mnf69fquict516to1aj9fg1a844a4sk8.apps.googleusercontent.com',
-    iosBundleId: 'com.example.exam',
+    iosBundleId: 'com.abdalwaly.quizai',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -77,7 +76,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'flutterfire-57d9b.firebasestorage.app',
     androidClientId: '776332381264-6826qo6clcnf6ej8730f551jok6om8gs.apps.googleusercontent.com',
     iosClientId: '776332381264-mnf69fquict516to1aj9fg1a844a4sk8.apps.googleusercontent.com',
-    iosBundleId: 'com.example.exam',
+    iosBundleId: 'com.abdalwaly.quizai',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

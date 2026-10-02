@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.quizapp.exam"
+    namespace = "com.abdalwaly.quizai"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "29.0.13599879"
 
@@ -30,7 +30,7 @@ android {
 
     defaultConfig {
         // Unique Application ID for Production
-        applicationId = "com.quizapp.exam"
+        applicationId = "com.abdalwaly.quizai"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = 1
